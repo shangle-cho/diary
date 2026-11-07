@@ -1,0 +1,1216 @@
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>할 일 중심 다이어리 플래너</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Pretendard / Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans KR"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: var(--bg-main, #faf6f0);
+      color: #2b2520;
+      transition: background-color 0.25s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Sticky Memo Washi Tape */
+    .washi-memo {
+      position: relative;
+    }
+    .washi-memo::before {
+      content: '';
+      position: absolute;
+      top: -9px;
+      left: 50%;
+      transform: translateX(-50%) rotate(-1deg);
+      width: 70px;
+      height: 18px;
+      background-color: rgba(240, 220, 170, 0.7);
+      border-left: 2px dashed rgba(180, 150, 90, 0.3);
+      border-right: 2px dashed rgba(180, 150, 90, 0.3);
+      border-radius: 2px;
+      z-index: 10;
+    }
+    /* Smooth Task Transitions */
+    .task-item {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .task-item:hover {
+      transform: translateY(-1px);
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: rgba(0,0,0,0.15);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-amber-200 selection:text-amber-900">
+
+  <!-- ================= HEADER (연동 & 테마 제어) ================= -->
+  <header class="sticky top-0 z-40 backdrop-blur-md bg-white/85 border-b border-stone-200/80 px-4 py-2.5">
+    <div class="max-w-5xl mx-auto flex items-center justify-between gap-2">
+      <!-- Title -->
+      <div class="flex items-center gap-2">
+        <span class="text-xl">📋</span>
+        <h1 class="text-base sm:text-lg font-bold tracking-tight text-stone-800 flex items-center gap-1.5">
+          <span id="plannerTitleDisplay">2027 할 일 플래너</span>
+          <button onclick="openTitleEditModal()" class="text-stone-400 hover:text-stone-700 text-xs p-1" title="제목 수정">✏️</button>
+        </h1>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <!-- Cloud Sync (PC <-> Mobile) -->
+        <button onclick="openSyncModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border bg-amber-50 border-amber-200 text-stone-700 hover:bg-amber-100 transition shadow-xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="syncStatusDot"></span>
+          <span class="font-mono text-[11px] hidden sm:inline" id="headerSyncKey">연동 키</span>
+          <span>📱 PC·폰 연동</span>
+        </button>
+
+        <!-- Dakku & Theme -->
+        <button onclick="openDakkuModal()" class="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-medium bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 transition shadow-xs">
+          <span>✨</span>
+          <span>커버·다꾸</span>
+        </button>
+
+        <!-- Backup -->
+        <button onclick="openBackupModal()" class="p-1.5 rounded-xl text-stone-500 hover:bg-stone-100 transition" title="백업 및 내보내기">
+          📥
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN WRAPPER ================= -->
+  <main class="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-5 flex flex-col gap-4">
+
+    <!-- ================= COMPACT COVER BANNER ================= -->
+    <div id="coverWrapper" class="relative rounded-2xl overflow-hidden border border-stone-200/90 shadow-xs group">
+      <div id="coverImageContainer" class="h-28 sm:h-36 w-full bg-cover bg-center transition-all duration-300" style="background-image: url('https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1600&auto=format&fit=crop');">
+        <div class="absolute inset-0 bg-stone-900/35"></div>
+      </div>
+      
+      <!-- Overlay Minimal Info -->
+      <div class="absolute inset-0 p-4 sm:p-5 flex items-end justify-between text-white">
+        <div>
+          <span class="text-xs bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-lg text-amber-200 font-mono tracking-wider" id="yearBadge">2027 TASK LIST</span>
+          <p class="text-xs sm:text-sm text-stone-200 mt-1 font-medium">컴퓨터와 스마트폰에서 실시간으로 체크하는 할 일 목록</p>
+        </div>
+        <button onclick="openDakkuModal()" class="px-2.5 py-1 rounded-lg bg-black/40 hover:bg-black/60 backdrop-blur-md text-xs border border-white/20 transition">
+          🖼️ 커버 변경
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= VIEW NAVIGATION TABS (1년 / 분기별 / 월별) ================= -->
+    <div class="flex items-center justify-between border-b border-stone-200 pb-2">
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <button onclick="switchView('yearly')" id="tabBtn-yearly" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-stone-800 text-white shadow-xs">
+          🎯 1년 할 일
+        </button>
+        <button onclick="switchView('quarterly')" id="tabBtn-quarterly" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-stone-600 hover:bg-stone-100">
+          🌿 분기별 할 일 (Q1~Q4)
+        </button>
+        <button onclick="switchView('monthly')" id="tabBtn-monthly" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-stone-600 hover:bg-stone-100">
+          📅 월별 할 일 (1~12월)
+        </button>
+      </div>
+
+      <!-- Sticker Stash Trigger -->
+      <button onclick="openStickerModal()" class="text-xs text-rose-600 hover:text-rose-800 font-medium px-2 py-1 rounded-lg border border-rose-200 bg-rose-50/50">
+        🎀 스티커 붙이기
+      </button>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- 1. 1년 할 일 VIEW (YEARLY TASKS)                          -->
+    <!-- ========================================================= -->
+    <section id="view-yearly" class="space-y-4">
+      
+      <!-- Progress Bar & Quick Stats -->
+      <div class="bg-white/95 p-4 rounded-2xl border border-stone-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex-1">
+          <div class="flex items-center justify-between text-xs mb-1.5 font-medium">
+            <span class="text-stone-700">1년 전체 할 일 달성률</span>
+            <span id="yearlyProgressText" class="font-bold text-stone-900 font-mono">0/0 (0%)</span>
+          </div>
+          <div class="w-full bg-stone-100 rounded-full h-2.5 overflow-hidden">
+            <div id="yearlyProgressBar" class="h-full bg-stone-800 rounded-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+        </div>
+        <button onclick="openAddYearTaskModal()" class="shrink-0 px-3.5 py-2 bg-stone-800 hover:bg-stone-900 text-white text-xs font-semibold rounded-xl transition shadow-xs flex items-center justify-center gap-1">
+          <span>+</span> 1년 할 일 추가
+        </button>
+      </div>
+
+      <!-- Quick Task Input (Yearly) -->
+      <form onsubmit="handleQuickAddYearTask(event)" class="flex gap-2">
+        <input type="text" id="quickYearTaskInput" placeholder="올해 꼭 끝내야 할 중요한 일 입력 후 Enter..." class="flex-1 text-xs sm:text-sm bg-white border border-stone-200 rounded-xl px-3.5 py-2.5 outline-none focus:border-stone-500 shadow-xs">
+        <button type="submit" class="px-4 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-700 text-xs font-semibold rounded-xl transition">등록</button>
+      </form>
+
+      <!-- Yearly Task List -->
+      <div class="bg-white/95 p-4 rounded-2xl border border-stone-200/80 shadow-xs">
+        <div class="flex items-center justify-between mb-3 text-xs font-bold text-stone-600">
+          <span>올해의 할 일 버킷</span>
+          <span class="text-[11px] text-stone-400 font-normal">체크하면 실시간으로 달성률에 반영됩니다</span>
+        </div>
+        <div id="yearlyTaskList" class="space-y-2">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- 2. 분기별 할 일 VIEW (QUARTERLY TASKS: Q1 ~ Q4)            -->
+    <!-- ========================================================= -->
+    <section id="view-quarterly" class="space-y-4 hidden">
+      <div class="flex items-center justify-between px-1">
+        <p class="text-xs text-stone-500">4개 분기별로 나누어 굵직한 할 일들을 관리합니다.</p>
+        <button onclick="openAddQuarterTaskModal()" class="px-3 py-1.5 bg-stone-800 hover:bg-stone-900 text-white text-xs font-semibold rounded-xl transition shadow-xs">
+          + 분기 할 일 추가
+        </button>
+      </div>
+
+      <!-- 4 Quarters Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="quartersGrid">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- 3. 월별 할 일 VIEW (MONTHLY TASKS: 1월 ~ 12월)            -->
+    <!-- ========================================================= -->
+    <section id="view-monthly" class="space-y-4 hidden">
+      
+      <!-- Month Navigation Pills -->
+      <div class="bg-white/95 p-2 rounded-2xl border border-stone-200/80 shadow-xs flex items-center justify-between gap-1 overflow-x-auto">
+        <button onclick="changeMonth(-1)" class="p-1.5 rounded-lg text-stone-500 hover:bg-stone-100 transition shrink-0">◀</button>
+        <div class="flex items-center gap-1 overflow-x-auto py-0.5 no-scrollbar" id="monthPillContainer">
+          <!-- 1월 ~ 12월 Pills -->
+        </div>
+        <button onclick="changeMonth(1)" class="p-1.5 rounded-lg text-stone-500 hover:bg-stone-100 transition shrink-0">▶</button>
+      </div>
+
+      <!-- Monthly Split: Left (To-Do & Mini Calendar) | Right (Sticky Memo & Stickers) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        
+        <!-- Left: 8 Cols (Monthly Tasks & Calendar) -->
+        <div class="lg:col-span-8 space-y-4">
+          
+          <!-- Monthly Main Task Card -->
+          <div class="bg-white/95 p-4 rounded-2xl border border-stone-200/80 shadow-xs">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <h3 class="font-bold text-stone-800 text-sm sm:text-base flex items-center gap-1.5">
+                  <span id="monthlyTitleBadge">1월</span> 할 일 목록
+                </h3>
+                <span id="monthlyTodoCountBadge" class="text-xs bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full font-mono">0/0</span>
+              </div>
+              <button onclick="openAddMonthTaskModal()" class="px-2.5 py-1 text-xs bg-stone-800 text-white rounded-lg hover:bg-stone-900 transition">
+                + 추가
+              </button>
+            </div>
+
+            <!-- Quick Add Form -->
+            <form onsubmit="handleQuickAddMonthTask(event)" class="flex gap-2 mb-3">
+              <input type="text" id="quickMonthTaskInput" placeholder="이번 달 할 일 입력 후 Enter..." class="flex-1 text-xs bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 outline-none focus:border-stone-500 focus:bg-white transition">
+              <button type="submit" class="px-3 py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 text-xs font-semibold rounded-xl transition">추가</button>
+            </form>
+
+            <!-- Tasks List -->
+            <div id="monthlyTaskList" class="space-y-1.5 min-h-[120px]">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Clean Monthly Day Picker Grid -->
+          <div class="bg-white/95 p-4 rounded-2xl border border-stone-200/80 shadow-xs">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold text-stone-700">날짜별 할 일 보기</span>
+              <span class="text-[11px] text-stone-400">날짜를 클릭하면 해당 날짜 마감 할 일을 바로 추가합니다</span>
+            </div>
+            <!-- Week Header -->
+            <div class="grid grid-cols-7 gap-1 text-center font-medium text-xs text-stone-400 mb-1.5">
+              <span class="text-rose-400">일</span>
+              <span>월</span>
+              <span>화</span>
+              <span>수</span>
+              <span>목</span>
+              <span>금</span>
+              <span class="text-blue-400">토</span>
+            </div>
+            <!-- Days Grid -->
+            <div id="calendarDaysGrid" class="grid grid-cols-7 gap-1 text-center">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right: 4 Cols (Sticky Memo & Pinned Stickers) -->
+        <div class="lg:col-span-4 space-y-4">
+          
+          <!-- Sticky Memo Note (Pure Memo, No Vision) -->
+          <div class="bg-amber-50 washi-memo p-4 rounded-2xl border border-amber-200/70 shadow-xs relative">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-amber-900">📌 이번 달 메모 & 주의사항</span>
+              <span class="text-[10px] text-amber-700/60" id="memoAutoSaveNotice">자동 저장</span>
+            </div>
+            <textarea id="monthlyMemoInput" oninput="handleMemoInput(this.value)" rows="7" placeholder="잊지 말아야 할 약속, 메모, 예산 등을 자유롭게 적어두세요..." class="w-full text-xs bg-white/70 border border-amber-200/60 rounded-xl p-2.5 outline-none focus:bg-white focus:border-amber-400 leading-relaxed resize-none text-stone-800"></textarea>
+          </div>
+
+          <!-- Pinned Stickers on this Month -->
+          <div class="bg-white/90 p-4 rounded-2xl border border-stone-200/80 shadow-xs">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-stone-700">🎀 붙여둔 스티커</span>
+              <button onclick="openStickerModal()" class="text-xs text-rose-600 hover:underline">+ 추가</button>
+            </div>
+            <div id="pinnedStickersList" class="flex flex-wrap gap-1.5 p-2 bg-stone-50 rounded-xl min-h-[46px] items-center border border-dashed border-stone-200">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- Modal: Sync (PC & Mobile 6-Digit Key) -->
+  <div id="syncModal" class="fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl border border-stone-200 relative">
+      <button onclick="closeModal('syncModal')" class="absolute top-3.5 right-3.5 text-stone-400 hover:text-stone-600 p-1">✕</button>
+
+      <div class="text-center mb-4">
+        <span class="text-2xl">📱 🔄 💻</span>
+        <h3 class="font-bold text-stone-800 text-base mt-1">컴퓨터와 스마트폰 연동</h3>
+        <p class="text-xs text-stone-500 mt-0.5">양쪽 기기에 같은 연동 키를 입력하면 체크와 할 일이 실시간 동기화됩니다.</p>
+      </div>
+
+      <div class="bg-amber-50 rounded-xl p-3 border border-amber-200 text-center mb-3">
+        <span class="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">현재 내 다이어리 연동 키</span>
+        <div class="flex items-center justify-center gap-2 mt-1">
+          <span id="currentSyncKeyText" class="font-mono text-xl font-black text-stone-800 tracking-wider">PLAN-101</span>
+          <button onclick="copySyncKey()" class="p-1 rounded-md bg-amber-200 hover:bg-amber-300 text-stone-700 text-xs">📋 복사</button>
+        </div>
+        <p id="copyToast" class="text-[10px] text-emerald-600 font-medium mt-1 hidden">연동 키가 복사되었습니다!</p>
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-stone-700">다른 기기 연동 키 불러오기</label>
+        <div class="flex gap-1.5">
+          <input type="text" id="syncKeyManualInput" placeholder="예: PLAN-101" class="flex-1 text-xs border border-stone-200 rounded-xl px-3 py-2 font-mono uppercase outline-none focus:border-stone-500">
+          <button onclick="applyNewSyncKey()" class="px-3.5 py-2 bg-stone-800 hover:bg-stone-900 text-white rounded-xl text-xs font-semibold">적용</button>
+        </div>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-stone-100 flex justify-end">
+        <button onclick="closeModal('syncModal')" class="px-3 py-1.5 bg-stone-100 text-stone-600 text-xs rounded-xl">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Dakku & Custom Cover & Theme -->
+  <div id="dakkuModal" class="fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl border border-stone-200 relative max-h-[85vh] overflow-y-auto">
+      <button onclick="closeModal('dakkuModal')" class="absolute top-3.5 right-3.5 text-stone-400 hover:text-stone-600 p-1">✕</button>
+
+      <h3 class="font-bold text-stone-800 text-base mb-1 flex items-center gap-1.5">
+        <span>✨</span> 커버 이미지 및 색상 변경
+      </h3>
+      <p class="text-xs text-stone-500 mb-4">다이어리 배경색과 상단 커버 이미지를 원하는 대로 변경하세요.</p>
+
+      <!-- 1. Theme Color -->
+      <div class="mb-4">
+        <label class="block text-xs font-bold text-stone-700 mb-2">🎨 다이어리 배경 색상</label>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="themeButtonsGrid">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- 2. Cover Presets -->
+      <div class="mb-4">
+        <label class="block text-xs font-bold text-stone-700 mb-2">🖼️ 커버 이미지 프리셋</label>
+        <div class="grid grid-cols-2 gap-2" id="coverPresetsGrid">
+          <!-- Rendered via JS -->
+        </div>
+        <div class="mt-2 flex gap-1.5">
+          <input type="text" id="customCoverInput" placeholder="직접 이미지 URL 입력 (https://...)" class="flex-1 text-xs border border-stone-200 rounded-xl px-3 py-2 outline-none">
+          <button onclick="applyCustomCover()" class="px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-medium rounded-xl">적용</button>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-stone-100 flex justify-end">
+        <button onclick="closeModal('dakkuModal')" class="px-4 py-1.5 bg-stone-800 text-white text-xs font-semibold rounded-xl">완료</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add / Edit Yearly Task -->
+  <div id="yearTaskModal" class="fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl border border-stone-200 relative">
+      <button onclick="closeModal('yearTaskModal')" class="absolute top-3.5 right-3.5 text-stone-400 hover:text-stone-600 p-1">✕</button>
+      <h3 class="font-bold text-stone-800 text-sm mb-3">1년 할 일 등록</h3>
+
+      <form onsubmit="handleSaveYearTaskModal(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs text-stone-600 mb-1">할 일 내용</label>
+          <input type="text" id="yearTaskModalInput" required placeholder="예: 운전면허 갱신 및 적성검사" class="w-full text-xs border border-stone-200 rounded-xl px-3 py-2 outline-none focus:border-stone-500">
+        </div>
+        <div>
+          <label class="block text-xs text-stone-600 mb-1">분류 태그</label>
+          <select id="yearTaskTagSelect" class="w-full text-xs bg-stone-50 border border-stone-200 rounded-xl px-2.5 py-2 outline-none">
+            <option value="중요">🔴 중요</option>
+            <option value="업무">💼 업무</option>
+            <option value="개인">🌿 개인</option>
+            <option value="자격증/학습">📚 학습</option>
+            <option value="건강/운동">🏃 건강</option>
+          </select>
+        </div>
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('yearTaskModal')" class="px-3 py-1.5 bg-stone-100 text-stone-600 text-xs rounded-xl">취소</button>
+          <button type="submit" class="px-4 py-1.5 bg-stone-800 text-white text-xs font-semibold rounded-xl">추가</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Quarter Task -->
+  <div id="quarterTaskModal" class="fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl border border-stone-200 relative">
+      <button onclick="closeModal('quarterTaskModal')" class="absolute top-3.5 right-3.5 text-stone-400 hover:text-stone-600 p-1">✕</button>
+      <h3 class="font-bold text-stone-800 text-sm mb-3">분기별 할 일 등록</h3>
+
+      <form onsubmit="handleSaveQuarterTaskModal(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs text-stone-600 mb-1">분기 선택</label>
+          <select id="quarterSelectModal" class="w-full text-xs bg-stone-50 border border-stone-200 rounded-xl px-2.5 py-2 outline-none">
+            <option value="Q1">Q1 (1월 - 3월)</option>
+            <option value="Q2">Q2 (4월 - 6월)</option>
+            <option value="Q3">Q3 (7월 - 9월)</option>
+            <option value="Q4">Q4 (10월 - 12월)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-stone-600 mb-1">할 일 내용</label>
+          <input type="text" id="quarterTaskModalInput" required placeholder="예: 봄맞이 침구류 교체 및 대청소" class="w-full text-xs border border-stone-200 rounded-xl px-3 py-2 outline-none focus:border-stone-500">
+        </div>
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('quarterTaskModal')" class="px-3 py-1.5 bg-stone-100 text-stone-600 text-xs rounded-xl">취소</button>
+          <button type="submit" class="px-4 py-1.5 bg-stone-800 text-white text-xs font-semibold rounded-xl">추가</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Monthly Task -->
+  <div id="monthTaskModal" class="fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl border border-stone-200 relative">
+      <button onclick="closeModal('monthTaskModal')" class="absolute top-3.5 right-3.5 text-stone-400 hover:text-stone-600 p-1">✕</button>
+      <h3 class="font-bold text-stone-800 text-sm mb-3">이달의 할 일 등록</h3>
+
+      <form onsubmit="handleSaveMonthTaskModal(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs text-stone-600 mb-1">할 일 내용</label>
+          <input type="text" id="monthTaskModalInput" required placeholder="예: 치과 검진 예약" class="w-full text-xs border border-stone-200 rounded-xl px-3 py-2 outline-none focus:border-stone-500">
+        </div>
+        <div>
+          <label class="block text-xs text-stone-600 mb-1">마감일 (Day, 선택)</label>
+          <input type="number" id="monthTaskDayInput" min="1" max="31" placeholder="예: 15 (미입력 시 무관)" class="w-full text-xs border border-stone-200 rounded-xl px-3 py-2 outline-none">
+        </div>
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('monthTaskModal')" class="px-3 py-1.5 bg-stone-100 text-stone-600 text-xs rounded-xl">취소</button>
+          <button type="submit" class="px-4 py-1.5 bg-stone-800 text-white text-xs font-semibold rounded-xl">추가</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Sticker Palette -->
+  <div id="stickerModal" class="fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-xl border border-stone-200 relative text-center">
+      <button onclick="closeModal('stickerModal')" class="absolute top-3.5 right-3.5 text-stone-400 hover:text-stone-600 p-1">✕</button>
+      <h3 class="font-bold text-stone-800 text-sm mb-2">다꾸 스티커 콕 붙이기</h3>
+      <div class="grid grid-cols-5 gap-2 p-2 bg-stone-50 rounded-xl mb-3 text-2xl select-none" id="stickerPaletteGrid">
+        <!-- Rendered via JS -->
+      </div>
+      <button onclick="closeModal('stickerModal')" class="w-full py-1.5 bg-stone-100 text-stone-600 text-xs rounded-xl">닫기</button>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Diary Title -->
+  <div id="titleModal" class="fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-xl border border-stone-200 relative">
+      <button onclick="closeModal('titleModal')" class="absolute top-3.5 right-3.5 text-stone-400 hover:text-stone-600 p-1">✕</button>
+      <h3 class="font-bold text-stone-800 text-sm mb-2">플래너 제목 변경</h3>
+      <input type="text" id="inputPlannerTitle" class="w-full text-xs border border-stone-200 rounded-xl px-3 py-2 outline-none mb-3" placeholder="예: 나의 2027 플래너">
+      <div class="flex justify-end gap-1.5">
+        <button onclick="closeModal('titleModal')" class="px-3 py-1.5 bg-stone-100 text-stone-600 text-xs rounded-xl">취소</button>
+        <button onclick="savePlannerTitle()" class="px-4 py-1.5 bg-stone-800 text-white text-xs font-semibold rounded-xl">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Backup -->
+  <div id="backupModal" class="fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-xl border border-stone-200 relative">
+      <button onclick="closeModal('backupModal')" class="absolute top-3.5 right-3.5 text-stone-400 hover:text-stone-600 p-1">✕</button>
+      <h3 class="font-bold text-stone-800 text-sm mb-3">데이터 백업 & 저장</h3>
+      <div class="space-y-2">
+        <button onclick="exportJSON()" class="w-full py-2 bg-stone-800 text-white text-xs font-semibold rounded-xl hover:bg-stone-900 transition flex items-center justify-center gap-1.5">
+          <span>📦</span> JSON 파일 다운로드
+        </button>
+        <button onclick="copyAllTasksText()" class="w-full py-2 bg-stone-100 text-stone-700 text-xs font-medium rounded-xl hover:bg-stone-200 transition flex items-center justify-center gap-1.5">
+          <span>📋</span> 전체 할 일 텍스트 복사
+        </button>
+      </div>
+      <p id="backupToast" class="text-[11px] text-emerald-600 font-medium text-center mt-2.5 hidden">복사 완료!</p>
+    </div>
+  </div>
+
+  <!-- ================= LOGIC & FIREBASE SYNC ================= -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Clean Task-Only Data Structure
+    const INITIAL_DATA = {
+      meta: {
+        title: "2027 할 일 플래너",
+        theme: "beige",
+        coverUrl: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1600&auto=format&fit=crop"
+      },
+      yearlyTasks: [
+        { id: "yt1", text: "건강검진 종합 패키지 받기", tag: "건강", done: false },
+        { id: "yt2", text: "비상금 통장 잔고 목표 달성", tag: "중요", done: true },
+        { id: "yt3", text: "자격증 취득 및 포트폴리오 업데이트", tag: "업무", done: false }
+      ],
+      quarterlyTasks: {
+        Q1: [
+          { id: "qt1", text: "1분기 프로젝트 기획 완료", done: true },
+          { id: "qt2", text: "방 서랍 및 불필요한 짐 정리", done: false }
+        ],
+        Q2: [
+          { id: "qt3", text: "상반기 성과 중간 점검", done: false }
+        ],
+        Q3: [
+          { id: "qt4", text: "여름 휴가 일정 및 예약", done: false }
+        ],
+        Q4: [
+          { id: "qt5", text: "연말정산 서류 준비 및 결산", done: false }
+        ]
+      },
+      months: {
+        1: {
+          memo: "치과 예약 15일 잊지 말기. 관리비 납부 확인.",
+          stickers: ["🌸", "☕"],
+          tasks: [
+            { id: "mt1", text: "신년 다이어리 할 일 세팅하기", day: 2, done: true },
+            { id: "mt2", text: "치과 스케일링 예약", day: 15, done: false },
+            { id: "mt3", text: "생필품 리필 구매", day: 20, done: false }
+          ]
+        }
+      }
+    };
+
+    const THEMES = {
+      beige: { name: "웜 베이지", bg: "#faf6f0", dot: "#b08968" },
+      peach: { name: "코지 피치", bg: "#fff6f2", dot: "#f46c3b" },
+      sage: { name: "세이지 올리브", bg: "#f3f6f3", dot: "#6b8e6c" },
+      lavender: { name: "소프트 라벤더", bg: "#f8f5fc", dot: "#8a63c0" },
+      mono: { name: "클린 모노", bg: "#f8f9fa", dot: "#343a40" }
+    };
+
+    const COVERS = [
+      { name: "편안한 데스크", url: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1600&auto=format&fit=crop" },
+      { name: "따뜻한 카페", url: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=1600&auto=format&fit=crop" },
+      { name: "자연 햇살", url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600&auto=format&fit=crop" },
+      { name: "미니멀 우드", url: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1600&auto=format&fit=crop" }
+    ];
+
+    const STICKERS = ["🌸", "☕", "🥑", "✨", "📌", "🧸", "🚀", "💡", "🍀", "🥞"];
+
+    // App State
+    let state = JSON.parse(JSON.stringify(INITIAL_DATA));
+    let currentView = 'yearly';
+    let currentMonth = 1;
+    let syncKey = "";
+    let authUser = null;
+    let db = null;
+    let auth = null;
+    let isRemoteUpdate = false;
+    let unsubSnapshot = null;
+
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'pure-todo-planner';
+
+    function initSyncKey() {
+      let key = null;
+      try { key = localStorage.getItem("pure_planner_key"); } catch(e){}
+      if (!key) {
+        key = `PLAN-${Math.floor(100 + Math.random() * 900)}`;
+        try { localStorage.setItem("pure_planner_key", key); } catch(e){}
+      }
+      syncKey = key;
+      updateSyncKeyUI();
+    }
+
+    function updateSyncKeyUI() {
+      const headerKey = document.getElementById("headerSyncKey");
+      if (headerKey) headerKey.textContent = syncKey;
+      const modalKey = document.getElementById("currentSyncKeyText");
+      if (modalKey) modalKey.textContent = syncKey;
+    }
+
+    async function initFirebase() {
+      initSyncKey();
+
+      let cfg = null;
+      if (typeof __firebase_config !== 'undefined') {
+        try { cfg = JSON.parse(__firebase_config); } catch(e){}
+      }
+
+      if (!cfg) {
+        loadLocalFallback();
+        renderAll();
+        return;
+      }
+
+      try {
+        const app = initializeApp(cfg);
+        auth = getAuth(app);
+        db = getFirestore(app);
+
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+
+        authUser = auth.currentUser;
+        subscribeCloud(syncKey);
+      } catch (err) {
+        console.warn("Firebase fallback:", err);
+        loadLocalFallback();
+        renderAll();
+      }
+    }
+
+    function subscribeCloud(key) {
+      if (!db || !authUser) return;
+      if (unsubSnapshot) unsubSnapshot();
+
+      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'pure_diaries', key);
+      unsubSnapshot = onSnapshot(docRef, (snap) => {
+        if (snap.exists() && snap.data()?.payload) {
+          isRemoteUpdate = true;
+          state = snap.data().payload;
+          renderAll();
+          isRemoteUpdate = false;
+        } else {
+          pushCloud();
+        }
+        updateDot(true);
+      }, () => updateDot(false));
+    }
+
+    let saveTimer = null;
+    function persistChanges() {
+      try {
+        localStorage.setItem("pure_planner_cache_" + syncKey, JSON.stringify(state));
+      } catch(e){}
+
+      if (!db || !authUser) return;
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(pushCloud, 400);
+    }
+
+    async function pushCloud() {
+      if (!db || !authUser || !syncKey) return;
+      try {
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'pure_diaries', syncKey);
+        await setDoc(docRef, { payload: state, updatedAt: new Date().toISOString() });
+      } catch(e){}
+    }
+
+    function loadLocalFallback() {
+      try {
+        const raw = localStorage.getItem("pure_planner_cache_" + syncKey);
+        if (raw) state = JSON.parse(raw);
+      } catch(e){}
+    }
+
+    function updateDot(online) {
+      const dot = document.getElementById("syncStatusDot");
+      if (dot) dot.className = online ? "w-2 h-2 rounded-full bg-emerald-500 animate-pulse" : "w-2 h-2 rounded-full bg-amber-500";
+    }
+
+    // --- Render Functions ---
+    function renderAll() {
+      applyTheme();
+      renderHeaderAndCover();
+      renderYearlyView();
+      renderQuarterlyView();
+      renderMonthlyView();
+    }
+
+    function applyTheme() {
+      const th = THEMES[state.meta.theme] || THEMES.beige;
+      document.body.style.setProperty('--bg-main', th.bg);
+    }
+
+    function renderHeaderAndCover() {
+      const title = document.getElementById("plannerTitleDisplay");
+      if (title) title.textContent = state.meta.title;
+
+      const cover = document.getElementById("coverImageContainer");
+      if (cover && state.meta.coverUrl) {
+        cover.style.backgroundImage = `url('${state.meta.coverUrl}')`;
+      }
+    }
+
+    // --- 1. Yearly Tasks View ---
+    function renderYearlyView() {
+      const tasks = state.yearlyTasks || [];
+      const doneCount = tasks.filter(t => t.done).length;
+      const total = tasks.length;
+      const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+
+      const prgText = document.getElementById("yearlyProgressText");
+      if (prgText) prgText.textContent = `${doneCount}/${total} (${pct}%)`;
+
+      const prgBar = document.getElementById("yearlyProgressBar");
+      if (prgBar) prgBar.style.width = `${pct}%`;
+
+      const list = document.getElementById("yearlyTaskList");
+      if (!list) return;
+
+      if (tasks.length === 0) {
+        list.innerHTML = `<p class="text-xs text-stone-400 py-4 text-center">올해 해야 할 일을 입력창에 등록해보세요.</p>`;
+        return;
+      }
+
+      list.innerHTML = tasks.map(t => `
+        <div class="task-item flex items-center justify-between p-2.5 rounded-xl border ${t.done ? 'bg-stone-50/70 border-stone-200/50' : 'bg-white border-stone-200/80'} shadow-2xs group">
+          <div class="flex items-center gap-2.5 min-w-0 flex-1">
+            <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleYearTaskDone('${t.id}')" class="w-4 h-4 rounded text-stone-800 focus:ring-0 cursor-pointer">
+            <span class="text-xs ${t.done ? 'line-through text-stone-400' : 'text-stone-800 font-medium'} truncate">${t.text}</span>
+            ${t.tag ? `<span class="text-[10px] px-1.5 py-0.5 rounded-md bg-stone-100 text-stone-500 shrink-0">${t.tag}</span>` : ''}
+          </div>
+          <button onclick="deleteYearTask('${t.id}')" class="text-stone-300 group-hover:text-rose-500 hover:text-rose-700 text-xs p-1">✕</button>
+        </div>
+      `).join('');
+    }
+
+    // --- 2. Quarterly Tasks View ---
+    function renderQuarterlyView() {
+      const qGrid = document.getElementById("quartersGrid");
+      if (!qGrid) return;
+
+      const qMap = { Q1: "1월 - 3월", Q2: "4월 - 6월", Q3: "7월 - 9월", Q4: "10월 - 12월" };
+
+      qGrid.innerHTML = ["Q1", "Q2", "Q3", "Q4"].map(q => {
+        const tasks = state.quarterlyTasks[q] || [];
+        const done = tasks.filter(t => t.done).length;
+
+        return `
+          <div class="bg-white/95 p-4 rounded-2xl border border-stone-200/80 shadow-xs flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-1.5">
+                  <span class="font-bold text-stone-800 text-base">${q}</span>
+                  <span class="text-xs text-stone-400 font-medium">${qMap[q]}</span>
+                </div>
+                <span class="text-[11px] font-mono bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full">${done}/${tasks.length} 완료</span>
+              </div>
+
+              <!-- Quick Task Input inside Quarter Card -->
+              <form onsubmit="handleQuarterQuickAdd(event, '${q}')" class="flex gap-1.5 mb-2.5">
+                <input type="text" placeholder="${q} 할 일 추가..." class="flex-1 text-xs bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-1.5 outline-none focus:bg-white focus:border-stone-400">
+                <button type="submit" class="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-lg">+</button>
+              </form>
+
+              <!-- Task Items -->
+              <div class="space-y-1.5">
+                ${tasks.length === 0 ? `<p class="text-xs text-stone-400 py-3 text-center">할 일이 없습니다.</p>` : tasks.map(t => `
+                  <div class="task-item flex items-center justify-between p-2 rounded-lg border ${t.done ? 'bg-stone-50/60 border-stone-200/40' : 'bg-white border-stone-200/60'} group">
+                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                      <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleQuarterTaskDone('${q}', '${t.id}')" class="w-3.5 h-3.5 rounded text-stone-800 focus:ring-0 cursor-pointer">
+                      <span class="text-xs ${t.done ? 'line-through text-stone-400' : 'text-stone-800 font-medium'} truncate">${t.text}</span>
+                    </div>
+                    <button onclick="deleteQuarterTask('${q}', '${t.id}')" class="text-stone-300 group-hover:text-rose-500 text-xs p-1">✕</button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // --- 3. Monthly Tasks View ---
+    function renderMonthlyView() {
+      // Pills
+      const pillBox = document.getElementById("monthPillContainer");
+      if (pillBox) {
+        pillBox.innerHTML = Array.from({ length: 12 }, (_, i) => i + 1).map(m => `
+          <button onclick="selectMonth(${m})" class="px-3 py-1 rounded-xl text-xs font-semibold shrink-0 transition ${m === currentMonth ? 'bg-stone-800 text-white shadow-2xs' : 'bg-stone-100 hover:bg-stone-200 text-stone-600'}">
+            ${m}월
+          </button>
+        `).join('');
+      }
+
+      const badge = document.getElementById("monthlyTitleBadge");
+      if (badge) badge.textContent = `${currentMonth}월`;
+
+      const mData = state.months[currentMonth] || { tasks: [], stickers: [], memo: "" };
+      const tasks = mData.tasks || [];
+      const done = tasks.filter(t => t.done).length;
+
+      const cnt = document.getElementById("monthlyTodoCountBadge");
+      if (cnt) cnt.textContent = `${done}/${tasks.length}`;
+
+      // Monthly Task List
+      const list = document.getElementById("monthlyTaskList");
+      if (list) {
+        if (tasks.length === 0) {
+          list.innerHTML = `<p class="text-xs text-stone-400 py-6 text-center">이번 달 할 일이 없습니다. 할 일을 적어보세요!</p>`;
+        } else {
+          list.innerHTML = tasks.map(t => `
+            <div class="task-item flex items-center justify-between p-2 rounded-xl border ${t.done ? 'bg-stone-50/60 border-stone-200/50' : 'bg-white border-stone-200/70'} group">
+              <div class="flex items-center gap-2 min-w-0 flex-1">
+                <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleMonthTaskDone('${t.id}')" class="w-4 h-4 rounded text-stone-800 focus:ring-0 cursor-pointer">
+                <span class="text-xs ${t.done ? 'line-through text-stone-400' : 'text-stone-800 font-medium'} truncate">${t.text}</span>
+                ${t.day ? `<span class="text-[10px] px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 font-mono shrink-0">${t.day}일 마감</span>` : ''}
+              </div>
+              <button onclick="deleteMonthTask('${t.id}')" class="text-stone-300 group-hover:text-rose-500 text-xs p-1">✕</button>
+            </div>
+          `).join('');
+        }
+      }
+
+      // Memo Input (only set if not currently typing from remote)
+      const memoArea = document.getElementById("monthlyMemoInput");
+      if (memoArea && !isRemoteUpdate) {
+        memoArea.value = mData.memo || "";
+      }
+
+      // Calendar Grid
+      renderCalendar(tasks);
+
+      // Stickers
+      renderStickers(mData.stickers || []);
+    }
+
+    function renderCalendar(tasks) {
+      const grid = document.getElementById("calendarDaysGrid");
+      if (!grid) return;
+
+      const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][currentMonth - 1];
+      const startDay = new Date(2027, currentMonth - 1, 1).getDay();
+
+      let html = '';
+      for (let i = 0; i < startDay; i++) {
+        html += `<div class="h-9 rounded-lg bg-stone-50/30"></div>`;
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dayTasks = tasks.filter(t => t.day === d);
+        const hasTask = dayTasks.length > 0;
+        const allDone = hasTask && dayTasks.every(t => t.done);
+
+        html += `
+          <div onclick="clickDay(${d})" class="h-9 p-1 rounded-lg border border-stone-100 bg-white/70 hover:bg-amber-50/70 hover:border-amber-300 cursor-pointer flex flex-col justify-between items-center transition relative">
+            <span class="text-[11px] font-semibold text-stone-700">${d}</span>
+            ${hasTask ? `<span class="w-1.5 h-1.5 rounded-full ${allDone ? 'bg-emerald-500' : 'bg-rose-400'}"></span>` : ''}
+          </div>
+        `;
+      }
+      grid.innerHTML = html;
+    }
+
+    function renderStickers(stickers) {
+      const box = document.getElementById("pinnedStickersList");
+      if (!box) return;
+      if (stickers.length === 0) {
+        box.innerHTML = `<span class="text-xs text-stone-400">붙인 스티커가 없습니다.</span>`;
+        return;
+      }
+      box.innerHTML = stickers.map((s, idx) => `
+        <div class="relative group inline-block">
+          <span class="text-xl p-1 inline-block select-none cursor-default">${s}</span>
+          <button onclick="removeSticker(${idx})" class="absolute -top-1 -right-1 bg-stone-700 text-white rounded-full w-3.5 h-3.5 text-[8px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition">✕</button>
+        </div>
+      `).join('');
+    }
+
+    // --- Action Handlers ---
+    window.switchView = function(view) {
+      currentView = view;
+      ['yearly', 'quarterly', 'monthly'].forEach(v => {
+        const sec = document.getElementById(`view-${v}`);
+        const btn = document.getElementById(`tabBtn-${v}`);
+        if (sec && btn) {
+          if (v === view) {
+            sec.classList.remove('hidden');
+            btn.className = "px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-stone-800 text-white shadow-xs";
+          } else {
+            sec.classList.add('hidden');
+            btn.className = "px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-stone-600 hover:bg-stone-100";
+          }
+        }
+      });
+    };
+
+    window.selectMonth = function(m) {
+      currentMonth = m;
+      renderMonthlyView();
+    };
+
+    window.changeMonth = function(d) {
+      currentMonth += d;
+      if (currentMonth > 12) currentMonth = 1;
+      if (currentMonth < 1) currentMonth = 12;
+      renderMonthlyView();
+    };
+
+    window.clickDay = function(day) {
+      openAddMonthTaskModal(day);
+    };
+
+    // 1-Year Task Handlers
+    window.handleQuickAddYearTask = function(e) {
+      e.preventDefault();
+      const input = document.getElementById("quickYearTaskInput");
+      const text = input.value.trim();
+      if (!text) return;
+      state.yearlyTasks.push({ id: "yt_" + Date.now(), text, tag: "일반", done: false });
+      input.value = "";
+      renderYearlyView();
+      persistChanges();
+    };
+
+    window.toggleYearTaskDone = function(id) {
+      const t = state.yearlyTasks.find(i => i.id === id);
+      if (t) { t.done = !t.done; renderYearlyView(); persistChanges(); }
+    };
+
+    window.deleteYearTask = function(id) {
+      state.yearlyTasks = state.yearlyTasks.filter(i => i.id !== id);
+      renderYearlyView();
+      persistChanges();
+    };
+
+    window.handleSaveYearTaskModal = function(e) {
+      e.preventDefault();
+      const text = document.getElementById("yearTaskModalInput").value.trim();
+      const tag = document.getElementById("yearTaskTagSelect").value;
+      if (!text) return;
+      state.yearlyTasks.push({ id: "yt_" + Date.now(), text, tag, done: false });
+      closeModal('yearTaskModal');
+      renderYearlyView();
+      persistChanges();
+    };
+
+    // Quarter Task Handlers
+    window.handleQuarterQuickAdd = function(e, q) {
+      e.preventDefault();
+      const input = e.target.querySelector('input');
+      const text = input.value.trim();
+      if (!text) return;
+      if (!state.quarterlyTasks[q]) state.quarterlyTasks[q] = [];
+      state.quarterlyTasks[q].push({ id: "qt_" + Date.now(), text, done: false });
+      input.value = "";
+      renderQuarterlyView();
+      persistChanges();
+    };
+
+    window.toggleQuarterTaskDone = function(q, id) {
+      const t = state.quarterlyTasks[q]?.find(i => i.id === id);
+      if (t) { t.done = !t.done; renderQuarterlyView(); persistChanges(); }
+    };
+
+    window.deleteQuarterTask = function(q, id) {
+      if (state.quarterlyTasks[q]) {
+        state.quarterlyTasks[q] = state.quarterlyTasks[q].filter(i => i.id !== id);
+        renderQuarterlyView();
+        persistChanges();
+      }
+    };
+
+    window.handleSaveQuarterTaskModal = function(e) {
+      e.preventDefault();
+      const q = document.getElementById("quarterSelectModal").value;
+      const text = document.getElementById("quarterTaskModalInput").value.trim();
+      if (!text) return;
+      if (!state.quarterlyTasks[q]) state.quarterlyTasks[q] = [];
+      state.quarterlyTasks[q].push({ id: "qt_" + Date.now(), text, done: false });
+      closeModal('quarterTaskModal');
+      renderQuarterlyView();
+      persistChanges();
+    };
+
+    // Monthly Task Handlers
+    window.handleQuickAddMonthTask = function(e) {
+      e.preventDefault();
+      const input = document.getElementById("quickMonthTaskInput");
+      const text = input.value.trim();
+      if (!text) return;
+      if (!state.months[currentMonth]) state.months[currentMonth] = { tasks: [], stickers: [], memo: "" };
+      state.months[currentMonth].tasks.push({ id: "mt_" + Date.now(), text, day: null, done: false });
+      input.value = "";
+      renderMonthlyView();
+      persistChanges();
+    };
+
+    window.toggleMonthTaskDone = function(id) {
+      const tasks = state.months[currentMonth]?.tasks || [];
+      const t = tasks.find(i => i.id === id);
+      if (t) { t.done = !t.done; renderMonthlyView(); persistChanges(); }
+    };
+
+    window.deleteMonthTask = function(id) {
+      if (!state.months[currentMonth]) return;
+      state.months[currentMonth].tasks = state.months[currentMonth].tasks.filter(i => i.id !== id);
+      renderMonthlyView();
+      persistChanges();
+    };
+
+    window.handleSaveMonthTaskModal = function(e) {
+      e.preventDefault();
+      const text = document.getElementById("monthTaskModalInput").value.trim();
+      const dayVal = document.getElementById("monthTaskDayInput").value;
+      const day = dayVal ? parseInt(dayVal) : null;
+      if (!text) return;
+      if (!state.months[currentMonth]) state.months[currentMonth] = { tasks: [], stickers: [], memo: "" };
+      state.months[currentMonth].tasks.push({ id: "mt_" + Date.now(), text, day, done: false });
+      closeModal('monthTaskModal');
+      renderMonthlyView();
+      persistChanges();
+    };
+
+    // Memo Debounce
+    let memoDebounce = null;
+    window.handleMemoInput = function(val) {
+      if (!state.months[currentMonth]) state.months[currentMonth] = { tasks: [], stickers: [], memo: "" };
+      state.months[currentMonth].memo = val;
+      clearTimeout(memoDebounce);
+      memoDebounce = setTimeout(persistChanges, 500);
+    };
+
+    // Stickers
+    window.openStickerModal = function() {
+      const g = document.getElementById("stickerPaletteGrid");
+      if (g) {
+        g.innerHTML = STICKERS.map(s => `
+          <button onclick="pinSticker('${s}')" class="p-1.5 hover:scale-125 hover:bg-white rounded-lg transition">${s}</button>
+        `).join('');
+      }
+      openModal('stickerModal');
+    };
+
+    window.pinSticker = function(emoji) {
+      if (!state.months[currentMonth]) state.months[currentMonth] = { tasks: [], stickers: [], memo: "" };
+      if (!state.months[currentMonth].stickers) state.months[currentMonth].stickers = [];
+      state.months[currentMonth].stickers.push(emoji);
+      renderStickers(state.months[currentMonth].stickers);
+      closeModal('stickerModal');
+      persistChanges();
+    };
+
+    window.removeSticker = function(idx) {
+      if (state.months[currentMonth]?.stickers) {
+        state.months[currentMonth].stickers.splice(idx, 1);
+        renderStickers(state.months[currentMonth].stickers);
+        persistChanges();
+      }
+    };
+
+    // Theme & Cover Customization
+    window.openDakkuModal = function() {
+      // Themes Grid
+      const thGrid = document.getElementById("themeButtonsGrid");
+      if (thGrid) {
+        thGrid.innerHTML = Object.keys(THEMES).map(k => `
+          <div onclick="selectTheme('${k}')" class="p-2.5 rounded-xl border ${state.meta.theme === k ? 'border-stone-800 bg-stone-100 font-bold' : 'border-stone-200 bg-stone-50'} cursor-pointer flex items-center gap-2 text-xs">
+            <span class="w-4 h-4 rounded-full" style="background-color: ${THEMES[k].dot}"></span>
+            <span>${THEMES[k].name}</span>
+          </div>
+        `).join('');
+      }
+
+      // Covers Grid
+      const cvGrid = document.getElementById("coverPresetsGrid");
+      if (cvGrid) {
+        cvGrid.innerHTML = COVERS.map(c => `
+          <div onclick="selectCover('${c.url}')" class="relative rounded-xl overflow-hidden h-16 border border-stone-200 cursor-pointer group">
+            <img src="${c.url}" alt="${c.name}" class="w-full h-full object-cover group-hover:scale-105 transition">
+            <div class="absolute inset-0 bg-stone-900/30 flex items-end p-1.5 text-white">
+              <span class="text-[10px] font-medium">${c.name}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      openModal('dakkuModal');
+    };
+
+    window.selectTheme = function(k) {
+      state.meta.theme = k;
+      applyTheme();
+      openDakkuModal();
+      persistChanges();
+    };
+
+    window.selectCover = function(url) {
+      state.meta.coverUrl = url;
+      renderHeaderAndCover();
+      persistChanges();
+    };
+
+    window.applyCustomCover = function() {
+      const val = document.getElementById("customCoverInput").value.trim();
+      if (val) {
+        state.meta.coverUrl = val;
+        renderHeaderAndCover();
+        persistChanges();
+      }
+    };
+
+    // Title Modal
+    window.openTitleEditModal = function() {
+      document.getElementById("inputPlannerTitle").value = state.meta.title;
+      openModal('titleModal');
+    };
+
+    window.savePlannerTitle = function() {
+      const val = document.getElementById("inputPlannerTitle").value.trim();
+      if (val) {
+        state.meta.title = val;
+        renderHeaderAndCover();
+        persistChanges();
+      }
+      closeModal('titleModal');
+    };
+
+    // Sync Key Logic
+    window.openSyncModal = function() {
+      openModal('syncModal');
+    };
+
+    window.applyNewSyncKey = function() {
+      const val = document.getElementById("syncKeyManualInput").value.trim().toUpperCase();
+      if (!val) return;
+      syncKey = val;
+      try { localStorage.setItem("pure_planner_key", syncKey); } catch(e){}
+      updateSyncKeyUI();
+      closeModal('syncModal');
+      subscribeCloud(syncKey);
+    };
+
+    window.copySyncKey = function() {
+      const temp = document.createElement("input");
+      temp.value = syncKey;
+      document.body.appendChild(temp);
+      temp.select();
+      try {
+        document.execCommand('copy');
+        const t = document.getElementById("copyToast");
+        if (t) { t.classList.remove("hidden"); setTimeout(() => t.classList.add("hidden"), 2000); }
+      } catch(e){}
+      document.body.removeChild(temp);
+    };
+
+    // Backup
+    window.openBackupModal = function() { openModal('backupModal'); };
+
+    window.exportJSON = function() {
+      const str = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+      const a = document.createElement('a');
+      a.href = str;
+      a.download = `Todo_Planner_${syncKey}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    };
+
+    window.copyAllTasksText = function() {
+      let txt = `[${state.meta.title} 할 일 정리]\n\n`;
+      txt += `🎯 1년 할 일:\n`;
+      state.yearlyTasks.forEach(t => txt += `- [${t.done ? 'O' : ' '}] ${t.text} (${t.tag || '일반'})\n`);
+
+      txt += `\n🌿 분기별 할 일:\n`;
+      ['Q1', 'Q2', 'Q3', 'Q4'].forEach(q => {
+        txt += `\n[${q}]\n`;
+        (state.quarterlyTasks[q] || []).forEach(t => txt += `- [${t.done ? 'O' : ' '}] ${t.text}\n`);
+      });
+
+      const temp = document.createElement("textarea");
+      temp.value = txt;
+      document.body.appendChild(temp);
+      temp.select();
+      try {
+        document.execCommand('copy');
+        const toast = document.getElementById("backupToast");
+        if (toast) { toast.classList.remove("hidden"); setTimeout(() => toast.classList.add("hidden"), 2000); }
+      } catch(e){}
+      document.body.removeChild(temp);
+    };
+
+    // Modals Helpers
+    window.openModal = function(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.remove('hidden');
+    };
+    window.closeModal = function(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.add('hidden');
+    };
+    window.openAddYearTaskModal = function() {
+      document.getElementById("yearTaskModalInput").value = "";
+      openModal('yearTaskModal');
+    };
+    window.openAddQuarterTaskModal = function() {
+      document.getElementById("quarterTaskModalInput").value = "";
+      openModal('quarterTaskModal');
+    };
+    window.openAddMonthTaskModal = function(day = null) {
+      document.getElementById("monthTaskModalInput").value = "";
+      document.getElementById("monthTaskDayInput").value = day || "";
+      openModal('monthTaskModal');
+    };
+
+    // Initialize on window load
+    window.onload = function() {
+      initFirebase();
+    };
+  </script>
+</body>
+</html>
