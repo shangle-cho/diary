@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -135,7 +136,7 @@
     }
     .btn-add { background: var(--accent); color: white; border: none; padding: 0 16px; border-radius: 8px; font-weight: 700; cursor: pointer; }
 
-    .todo-scroll-list { max-height: 480px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    .todo-scroll-list { max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
     .todo-item {
       display: flex; align-items: center; justify-content: space-between;
       padding: 9px 12px; border-radius: 8px; background: var(--bg);
@@ -192,7 +193,7 @@
     <nav class="view-tabs">
       <button class="view-tab active" onclick="switchView('monthly')">월별 달력 ❤️ 아자아자 </button>
       <button class="view-tab" onclick="switchView('quarterly')">분기별 달력 (현재 분기 우선)</button>
-      <button class="view-tab" onclick="switchView('yearly')">1년 전체 달력 (이번 달부터 12개월)</button>
+      <button class="view-tab" onclick="switchView('yearly')">1년 전체 달력 (누적 일정 우선)</button>
     </nav>
 
     <!-- 월별 화면 -->
@@ -232,17 +233,26 @@
       <div id="quarterlyContainer"></div>
     </section>
 
-    <!-- 1년 화면 (이번 달부터 12개월 롤링 배치) -->
+    <!-- 1년 화면: 누적 일정 목록이 상단에 배치됨 -->
     <section id="view-yearly" style="display: none;">
+      <!-- 1. 1년 전체 누적 일정 카드 (상단 배치) -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <div>
+            <h3 style="font-size:17px; font-weight:800;" id="rollingYearAccumTitle">📋 앞으로 1년간의 누적 일정</h3>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">현재 달부터 12개월간 등록된 모든 일정이 순서대로 모여 있습니다.</p>
+          </div>
+          <span id="yearlyAccumBadge" style="font-size:12px; background:var(--accent-light); color:var(--accent); padding:3px 9px; border-radius:12px; font-weight:800;">0/0</span>
+        </div>
+        <div class="todo-scroll-list" id="yearlyAccumList" style="max-height:360px;"></div>
+      </div>
+
+      <!-- 2. 1년 12개월 롤링 달력 카드 (하단 배치) -->
       <div class="card" style="margin-bottom:16px;">
         <h2 style="font-size:18px; font-weight:800;" id="yearlySectionTitle">1년 롤링 달력 (이번 달부터 12개월)</h2>
-        <p style="font-size:12.5px; color:var(--text-muted); margin-top:4px;">현재 달을 기점으로 앞으로 다가올 1년 전체를 조망합니다.</p>
+        <p style="font-size:12.5px; color:var(--text-muted); margin-top:4px;">달력의 날짜를 누르면 해당 월별 화면으로 바로 이동합니다.</p>
       </div>
       <div class="year-12grid" id="year12Grid"></div>
-      <div class="card">
-        <h3 style="font-size:17px; font-weight:800; margin-bottom:14px;" id="rollingYearAccumTitle">📋 앞으로 1년간의 누적 일정</h3>
-        <div class="todo-scroll-list" id="yearlyAccumList" style="max-height:550px;"></div>
-      </div>
     </section>
   </main>
 
@@ -453,13 +463,13 @@
       return div;
     }
 
-    /* --- 분기별 렌더링 (현재 분기 최상단 배치) --- */
+    /* --- 분기별 렌더링 --- */
     function renderQuarterly() {
       const container = document.getElementById('quarterlyContainer');
       container.innerHTML = '';
       
       const realThisMonth = today.getMonth() + 1;
-      const currentQuarterIdx = Math.floor((realThisMonth - 1) / 3); // 0(1분기), 1(2분기), 2(3분기), 3(4분기)
+      const currentQuarterIdx = Math.floor((realThisMonth - 1) / 3);
 
       const baseQuarters = [
         { qNum: 1, name: '1분기', m: [1,2,3], icon: '🌱' },
@@ -468,7 +478,6 @@
         { qNum: 4, name: '4분기', m: [10,11,12], icon: '❄️' }
       ];
 
-      // 현재 분기부터 시작하도록 4개 분기 회전 재배치
       const rotatedQuarters = [];
       for (let i = 0; i < 4; i++) {
         rotatedQuarters.push(baseQuarters[(currentQuarterIdx + i) % 4]);
@@ -505,18 +514,14 @@
       });
     }
 
-    /* --- 1년 렌더링 (현재 달부터 12개월 롤링 배치) --- */
+    /* --- 1년 렌더링 (누적 목록 상단 + 롤링 12개월 하단) --- */
     function renderYearly() {
-      const grid = document.getElementById('year12Grid');
-      grid.innerHTML = '';
-
       const startYear = today.getFullYear();
       const startMonth = today.getMonth() + 1;
 
       document.getElementById('yearlySectionTitle').innerText = 
         `1년 롤링 달력 (${startYear}년 ${startMonth}월 ~ ${startMonth === 1 ? startYear : startYear + 1}년 ${(startMonth + 10) % 12 + 1}월)`;
 
-      // 현재 달부터 12개월 생성
       const rollingMonths = [];
       for (let i = 0; i < 12; i++) {
         let m = startMonth + i;
@@ -528,11 +533,7 @@
         rollingMonths.push({ year: y, month: m });
       }
 
-      rollingMonths.forEach(item => {
-        grid.innerHTML += buildMini(item.year, item.month);
-      });
-
-      // 12개월 구간 전체 일정 수집
+      // 1. 상단: 12개월 누적 일정 목록
       const yWrap = document.getElementById('yearlyAccumList');
       yWrap.innerHTML = '';
       
@@ -541,11 +542,29 @@
         return rollingMonths.some(rm => rm.year === y && rm.month === m);
       }).sort();
 
+      let yTotal = 0;
+      let yDone = 0;
+
       if (allRollingKeys.length === 0) {
         yWrap.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:30px;">앞으로 1년간 등록된 일정이 없습니다.</div>';
-        return;
+        document.getElementById('yearlyAccumBadge').innerText = '0/0';
+      } else {
+        allRollingKeys.forEach(k => {
+          store.todos[k].forEach(it => {
+            yTotal++;
+            if (it.done) yDone++;
+            yWrap.appendChild(createRow(k, it));
+          });
+        });
+        document.getElementById('yearlyAccumBadge').innerText = `${yDone}/${yTotal}`;
       }
-      allRollingKeys.forEach(k => store.todos[k].forEach(it => yWrap.appendChild(createRow(k, it))));
+
+      // 2. 하단: 12개월 달력 그리드
+      const grid = document.getElementById('year12Grid');
+      grid.innerHTML = '';
+      rollingMonths.forEach(item => {
+        grid.innerHTML += buildMini(item.year, item.month);
+      });
     }
 
     function buildMini(y, m) {
