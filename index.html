@@ -24,7 +24,7 @@
       --warning: #D97706;
       --warning-light: #FEF3C7;
       --important-color: #E65100;
-      --important-bg: #FFF3E0;
+      --important-bg: #FFF8E7;
       --header-img: url('https://images.unsplash.com/photo-1507842229451-7f01be8f5043?auto=format&fit=crop&w=1600&q=80');
       --shadow: 0 4px 18px rgba(135, 126, 119, 0.09);
       --radius: 16px;
@@ -103,7 +103,9 @@
       background: var(--card-bg); border-radius: var(--radius); padding: 20px;
       box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 18px;
     }
-    .split-layout { display: grid; grid-template-columns: 1.25fr 1fr; gap: 18px; }
+    
+    /* 2단 레이아웃 (목록 우선) */
+    .split-layout { display: grid; grid-template-columns: 1fr 1.25fr; gap: 18px; }
     @media (max-width: 920px) { .split-layout { grid-template-columns: 1fr; } }
 
     /* 달력 그리드 */
@@ -118,7 +120,7 @@
       border: 1px solid transparent; transition: all 0.15s;
       position: relative;
     }
-    .cal-day-cell:hover { border-color: var(--accent); }
+    .cal-day-cell:hover { border-color: var(--accent); transform: translateY(-1px); }
     .cal-day-cell.selected { background: var(--accent-light); border: 2px solid var(--accent); }
     .cal-day-cell.is-custom-holiday { background: var(--holiday-bg); border-color: #FFCDD2; }
     .cal-day-cell.has-important { border-color: #FBBF24; }
@@ -134,7 +136,7 @@
     .todo-dots { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; align-items: center; }
     .todo-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
     .todo-dot.done { background: #A0AAB2; }
-    .todo-dot.important { background: #F59E0B; width: 7px; height: 7px; box-shadow: 0 0 4px rgba(245, 158, 11, 0.6); }
+    .todo-dot.important { background: #F59E0B; width: 7px; height: 7px; box-shadow: 0 0 4px rgba(245, 158, 11, 0.7); }
 
     /* 입력 영역 & 버튼들 */
     .input-row { display: flex; gap: 6px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
@@ -156,15 +158,16 @@
     .btn-add { background: var(--accent); color: white; border: none; padding: 0 16px; height: 38px; border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 
     /* 누적 목록 */
-    .todo-scroll-list { max-height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 2px; }
+    .todo-scroll-list { max-height: 440px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 2px; }
     .todo-item {
       display: flex; align-items: center; justify-content: space-between;
       padding: 8px 12px; border-radius: 8px; background: var(--bg);
       border: 1px solid transparent; transition: all 0.15s;
     }
+    .todo-item:hover { border-color: var(--border); }
     .todo-item.is-important {
       background: var(--important-bg);
-      border: 1px solid #FFCC80;
+      border: 1px solid #FFD180;
     }
     .todo-left { display: flex; align-items: center; gap: 8px; flex: 1; }
     
@@ -189,10 +192,10 @@
     /* 주간 구분선 */
     .week-divider {
       display: flex; align-items: center; gap: 8px; margin: 8px 0 4px;
-      color: #A39992; font-size: 11px; font-weight: 700;
+      color: #B0A69D; font-size: 11px; font-weight: 700;
     }
     .week-divider::before, .week-divider::after {
-      content: ''; flex: 1; height: 1px; border-bottom: 1px dashed #D6CEC5;
+      content: ''; flex: 1; height: 1px; border-bottom: 1px dashed #DDD5CC;
     }
 
     .quarter-card { background: var(--card-bg); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); margin-bottom: 20px; }
@@ -221,12 +224,12 @@
       <div class="header-container">
         <div class="header-title">
           <h1>
-            <span class="editable-title" id="mainHeaderTitle" contenteditable="true" onblur="saveMainTitle(this.innerText)">2026년 다이어리</span>
-            <span style="font-size: 14px; opacity: 0.8; cursor: pointer;" title="클릭하여 제목 수정">✏️</span>
+            ✨ <span class="editable-title" id="mainHeaderTitle" contenteditable="true" onblur="saveMainTitle(this.innerText)">2026년 다이어리</span>
+            <span style="font-size: 14px; opacity: 0.85; cursor: pointer;" title="클릭하여 제목 수정">✏️</span>
           </h1>
         </div>
         <p style="font-size: 13px;">
-          <span class="sync-status-indicator" id="syncDot"></span><span id="syncText">🧐 관찰자 시점으로</span>
+          <span class="sync-status-indicator" id="syncDot"></span><span id="syncText">🧐 관찰자 시점으로 🌱</span>
         </p>
       </div>
     </div>
@@ -235,24 +238,35 @@
   <main class="main-wrap">
     <div class="mindful-bar">
       <div style="font-weight:700; font-size:13.5px; color:var(--text-main);">
-        한걸음 한걸음 발걸음을 앞으로 내밀 때, 나의 아침은 여전히 눈부시고 나의 저녁은 여전히 눈물겹도록 아름답지 않은가!
+        ✨ 한걸음 한걸음 발걸음을 앞으로 내밀 때, 나의 아침은 여전히 눈부시고 나의 저녁은 여전히 눈물겹도록 아름답지 않은가! 🌿
       </div>
     </div>
 
     <nav class="view-tabs">
-      <button class="view-tab active" onclick="switchView('monthly')">월별 달력 ❤️ 아자아자 </button>
-      <button class="view-tab" onclick="switchView('quarterly')">분기별 달력 </button>
-      <button class="view-tab" onclick="switchView('yearly')">1년 전체 달력 </button>
+      <button class="view-tab active" onclick="switchView('monthly')">📅 월별 달력 ❤️ 아자아자</button>
+      <button class="view-tab" onclick="switchView('quarterly')">📊 분기별 달력 🎯</button>
+      <button class="view-tab" onclick="switchView('yearly')">🗺️ 1년 전체 달력 🌈</button>
     </nav>
 
-    <!-- 월별 화면 -->
+    <!-- 1. 월별 화면: 누적 목록이 먼저 배치됨 -->
     <section id="view-monthly">
       <div class="split-layout">
+        
+        <!-- [1] 좌측/상단: 이번 달 전체 누적 목록 (먼저 나오게 배치) -->
         <div class="card">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-            <button onclick="changeMonth(-1)" style="padding:4px 10px; cursor:pointer;">◀</button>
+            <h3 style="font-size:16px; font-weight:800;" id="monthlyAccumTitle">🗓️ 11월 전체 누적 일정</h3>
+            <span id="monthlyAccumBadge" style="font-size:12px; background:var(--accent-light); color:var(--accent); padding:3px 9px; border-radius:12px; font-weight:800;">0/0</span>
+          </div>
+          <div class="todo-scroll-list" id="monthlyAccumList"></div>
+        </div>
+
+        <!-- [2] 우측/하단: 월 달력 및 당일 할 일 입력 -->
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <button onclick="changeMonth(-1)" style="padding:4px 10px; cursor:pointer; border-radius:6px; border:1px solid var(--border); background:white;">◀</button>
             <h2 id="calendarTitle" style="font-size:18px; font-weight:800;"></h2>
-            <button onclick="changeMonth(1)" style="padding:4px 10px; cursor:pointer;">▶</button>
+            <button onclick="changeMonth(1)" style="padding:4px 10px; cursor:pointer; border-radius:6px; border:1px solid var(--border); background:white;">▶</button>
           </div>
           <div class="cal-grid" id="mainCalendarGrid"></div>
 
@@ -269,31 +283,24 @@
           <div class="input-row">
             <input type="text" id="dayTodoInput" placeholder="할 일 입력 후 Enter..." onkeypress="handleDayEnter(event)">
             <button type="button" id="importantToggleBtn" class="btn-action" onclick="toggleInputImportance()">⭐ 중요</button>
-            <button class="btn-add" onclick="addDayTodo()">등록</button>
+            <button class="btn-add" onclick="addDayTodo()">➕ 등록</button>
           </div>
         </div>
 
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-            <h3 style="font-size:16px; font-weight:800;" id="monthlyAccumTitle">🗓️ 이번 달 전체 누적</h3>
-            <span id="monthlyAccumBadge" style="font-size:12px; background:var(--accent-light); color:var(--accent); padding:3px 9px; border-radius:12px; font-weight:800;">0/0</span>
-          </div>
-          <div class="todo-scroll-list" id="monthlyAccumList"></div>
-        </div>
       </div>
     </section>
 
-    <!-- 분기별 화면 -->
+    <!-- 2. 분기별 화면 -->
     <section id="view-quarterly" style="display: none;">
       <div id="quarterlyContainer"></div>
     </section>
 
-    <!-- 1년 화면 -->
+    <!-- 3. 1년 화면 -->
     <section id="view-yearly" style="display: none;">
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
           <div>
-            <h3 style="font-size:17px; font-weight:800;" id="rollingYearAccumTitle">📋 앞으로 1년간의 누적 일정</h3>
+            <h3 style="font-size:17px; font-weight:800;" id="rollingYearAccumTitle">📋 앞으로 1년간의 누적 일정 🚀</h3>
           </div>
           <span id="yearlyAccumBadge" style="font-size:12px; background:var(--accent-light); color:var(--accent); padding:3px 9px; border-radius:12px; font-weight:800;">0/0</span>
         </div>
@@ -314,7 +321,7 @@
     let isInputImportant = false;
     let store = { 
       todos: {},
-      holidays: {}, // key: "YYYY-MM-DD" => true (내가 지정한 휴일)
+      holidays: {},
       title: "2026년 다이어리"
     };
 
@@ -364,13 +371,13 @@
 
     function getDayOfWeek(dStr) {
       const [y, m, d] = dStr.split('-').map(Number);
-      return new Date(y, m - 1, d).getDay(); // 0(일) ~ 6(토)
+      return new Date(y, m - 1, d).getDay();
     }
 
     function isHoliday(dStr) {
       const dayIdx = getDayOfWeek(dStr);
-      if (dayIdx === 0) return true; // 일요일은 기본 휴일
-      return !!(store.holidays && store.holidays[dStr]); // 사용자가 지정한 휴일
+      if (dayIdx === 0) return true;
+      return !!(store.holidays && store.holidays[dStr]);
     }
 
     function formatShortDateWithDay(dStr) {
@@ -395,7 +402,6 @@
       }
     }
 
-    /* 선택된 날짜의 휴일 토글 */
     function toggleDateHoliday() {
       if (!store.holidays) store.holidays = {};
       if (store.holidays[selectedDateStr]) {
@@ -455,7 +461,7 @@
     }
 
     function renderMainCalendar() {
-      document.getElementById('calendarTitle').innerText = `${currentYear}년 ${currentMonth}월`;
+      document.getElementById('calendarTitle').innerText = `🗓️ ${currentYear}년 ${currentMonth}월`;
       const grid = document.getElementById('mainCalendarGrid');
       grid.innerHTML = '';
 
@@ -527,7 +533,7 @@
       const dIdx = getDayOfWeek(selectedDateStr);
       const isCustom = !!(store.holidays && store.holidays[selectedDateStr]);
       document.getElementById('selectedDateLabel').innerText = 
-        `📌 ${parseInt(p[1])}월 ${parseInt(p[2])}일(${dayKoreanNames[dIdx]})${isCustom ? ' [휴일]' : ''} 할 일 등록`;
+        `📌 ${parseInt(p[1])}월 ${parseInt(p[2])}일(${dayKoreanNames[dIdx]})${isCustom ? ' 🏖️[휴일]' : ''} 할 일 등록`;
     }
 
     function handleDayEnter(e) {
@@ -574,13 +580,13 @@
       renderAllViews();
     }
 
-    /* 누적 목록 생성 함수 (휴일 색상, 요일, 중요 표시, 주간 구분선) */
+    /* 누적 목록 생성 함수 */
     function buildAccumulatedListUI(container, dKeys) {
       container.innerHTML = '';
       let total = 0, done = 0;
 
       if (dKeys.length === 0) {
-        container.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:30px;">등록된 일정이 없습니다.</div>';
+        container.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:34px 10px;">🌱 등록된 일정이 아직 없어요!<br>달력에서 날짜를 콕 찍고 새로운 일정을 시작해 보세요 ✨</div>';
         return { total: 0, done: 0 };
       }
 
@@ -611,14 +617,14 @@
           container.appendChild(div);
         });
 
-        // 주간 구분선 (일요일이거나 다음 주로 넘어갈 때)
+        // 주간 구분선
         if (i < dKeys.length - 1) {
           const nextKey = dKeys[i + 1];
           const nextDayIdx = getDayOfWeek(nextKey);
           if (dayIdx === 0 || nextDayIdx < dayIdx || (nextDayIdx === 1 && dayIdx !== 1)) {
             const divider = document.createElement('div');
             divider.className = 'week-divider';
-            divider.innerText = '── 다음 주 ──';
+            divider.innerText = '✨ ── 🌷 다음 주 ── ✨';
             container.appendChild(divider);
           }
         }
@@ -628,7 +634,7 @@
     }
 
     function renderMonthlyAccum() {
-      document.getElementById('monthlyAccumTitle').innerText = `🗓️ ${currentMonth}월 전체 누적`;
+      document.getElementById('monthlyAccumTitle').innerText = `🗓️ ${currentMonth}월 전체 누적 일정`;
       const wrap = document.getElementById('monthlyAccumList');
       const prefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
       const dKeys = Object.keys(store.todos).filter(k => k.startsWith(prefix)).sort();
@@ -663,7 +669,7 @@
         card.innerHTML = `
           <div style="font-size:17px;font-weight:800;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
             <div>${q.icon} ${currentYear}년 ${q.name} (${q.m[0]}월 ~ ${q.m[2]}월)</div>
-            ${isCurrentQ ? '<span style="font-size:12px;background:var(--accent);color:white;padding:3px 10px;border-radius:12px;font-weight:700;">현재 분기</span>' : ''}
+            ${isCurrentQ ? '<span style="font-size:12px;background:var(--accent);color:white;padding:3px 10px;border-radius:12px;font-weight:700;">📍 현재 분기</span>' : ''}
           </div>
           <div class="mini-3cal-wrap">
             ${buildMini(currentYear, q.m[0])}
@@ -724,7 +730,7 @@
       let h = `
         <div class="mini-cal-box">
           <div style="font-size:12.5px;font-weight:800;margin-bottom:5px;display:flex;justify-content:space-between;">
-            <span>${y}년 ${m}월</span>
+            <span>🗓️ ${y}년 ${m}월</span>
             <button onclick="goToSpecificMonth(${y}, ${m})" style="border:none;background:none;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;">이동 ›</button>
           </div>
           <div class="mini-grid">
