@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>할 일 다이어리 & 플래너</title>
+  <title>캘린더 & 할 일 다이어리</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -15,9 +15,12 @@
       --text-muted: #8E837D;
       --accent: #B08968;
       --accent-light: #F7EFE5;
+      --accent-hover: #966C4C;
       --header-img: url('https://images.unsplash.com/photo-1507842229451-7f01be8f5043?auto=format&fit=crop&w=1600&q=80');
       --shadow: 0 4px 16px rgba(142, 131, 125, 0.08);
       --radius: 14px;
+      --sun-color: #E63946;
+      --sat-color: #457B9D;
     }
 
     [data-theme="peach"] {
@@ -26,6 +29,7 @@
       --text-main: #423531;
       --accent: #E07A5F;
       --accent-light: #FEECE5;
+      --accent-hover: #C66248;
       --header-img: url('https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1600&q=80');
     }
 
@@ -35,6 +39,7 @@
       --text-main: #2F3E35;
       --accent: #6B8F71;
       --accent-light: #EBF2EB;
+      --accent-hover: #527457;
       --header-img: url('https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1600&q=80');
     }
 
@@ -44,6 +49,7 @@
       --text-main: #383244;
       --accent: #8E7DBE;
       --accent-light: #F1EDFA;
+      --accent-hover: #7260A3;
       --header-img: url('https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=1600&q=80');
     }
 
@@ -53,6 +59,7 @@
       --text-main: #212529;
       --accent: #495057;
       --accent-light: #E9ECEF;
+      --accent-hover: #343A40;
       --header-img: url('https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1600&q=80');
     }
 
@@ -63,29 +70,20 @@
       color: var(--text-main);
       line-height: 1.5;
       padding-bottom: 70px;
-      transition: background-color 0.3s ease;
     }
 
-    /* 실시간 수정 가능 텍스트 스타일 */
     .editable-text {
       outline: none;
       border-radius: 4px;
       padding: 1px 4px;
-      transition: background 0.2s, box-shadow 0.2s;
+      transition: background 0.2s;
       cursor: text;
-      display: inline-block;
     }
-    .editable-text:hover {
-      background: rgba(176, 137, 104, 0.12);
-    }
-    .editable-text:focus {
-      background: #FFFFFF;
-      color: #222222;
-      box-shadow: 0 0 0 2px var(--accent);
-    }
+    .editable-text:hover { background: rgba(176, 137, 104, 0.15); }
+    .editable-text:focus { background: #FFFFFF; color: #222; box-shadow: 0 0 0 2px var(--accent); }
 
     .header-banner {
-      height: 190px;
+      height: 180px;
       background-image: var(--header-img);
       background-size: cover;
       background-position: center;
@@ -94,13 +92,13 @@
     .header-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.55) 100%);
+      background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%);
       display: flex;
       align-items: flex-end;
       padding: 24px;
     }
     .header-container {
-      max-width: 1040px;
+      max-width: 1100px;
       width: 100%;
       margin: 0 auto;
       display: flex;
@@ -111,10 +109,18 @@
     .header-title h1 {
       font-size: 26px;
       font-weight: 700;
-      letter-spacing: -0.5px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+    }
+    .year-shift-btn {
+      background: rgba(255,255,255,0.25);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
     }
     .header-title p {
       font-size: 13.5px;
@@ -135,13 +141,10 @@
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
     }
 
     .main-wrap {
-      max-width: 1040px;
+      max-width: 1100px;
       margin: -24px auto 0;
       padding: 0 16px;
       position: relative;
@@ -162,65 +165,220 @@
       text-align: center;
       padding: 10px 0;
       border-radius: 24px;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 600;
       color: var(--text-muted);
       cursor: pointer;
       border: none;
       background: transparent;
-      transition: all 0.2s ease;
+      transition: all 0.2s;
     }
     .view-tab.active {
       background: var(--accent);
       color: white;
     }
 
-    .content-card {
+    .card {
       background: var(--card-bg);
       border-radius: var(--radius);
-      padding: 22px;
+      padding: 20px;
       box-shadow: var(--shadow);
       border: 1px solid var(--border);
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
-    .card-head {
+
+    /* 달력 공통 스타일 */
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .cal-header-cell {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 0;
+      color: var(--text-muted);
+    }
+    .cal-header-cell.sun { color: var(--sun-color); }
+    .cal-header-cell.sat { color: var(--sat-color); }
+
+    .cal-day-cell {
+      min-height: 70px;
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 6px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+    }
+    .cal-day-cell:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .cal-day-cell.other-month {
+      opacity: 0.3;
+      cursor: default;
+    }
+    .cal-day-cell.selected {
+      background: var(--accent-light);
+      border: 2px solid var(--accent);
+    }
+    .cal-day-cell.today .day-num {
+      background: var(--accent);
+      color: white;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .day-num {
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .day-num.sun { color: var(--sun-color); }
+    .day-num.sat { color: var(--sat-color); }
+
+    .todo-dots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      margin-top: 4px;
+    }
+    .todo-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .todo-dot.done {
+      background: #A0AAB2;
+    }
+
+    /* 월별 탭 레이아웃 */
+    .monthly-layout {
+      display: grid;
+      grid-template-columns: 1.8fr 1.2fr;
+      gap: 20px;
+    }
+    @media (max-width: 860px) {
+      .monthly-layout { grid-template-columns: 1fr; }
+    }
+
+    .month-nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
-    .card-title {
+    .month-nav h2 {
+      font-size: 19px;
+      font-weight: 700;
+    }
+    .btn-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    /* 미니 달력 (분기 및 1년용) */
+    .mini-cal-box {
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 12px;
+    }
+    .mini-cal-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+      text-align: center;
+    }
+    .mini-day {
+      font-size: 11px;
+      padding: 4px 0;
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+    }
+    .mini-day:hover { background: var(--accent-light); }
+    .mini-day.has-todo::after {
+      content: '';
+      position: absolute;
+      bottom: 1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* 분기별 탭 */
+    .quarter-section {
+      margin-bottom: 24px;
+    }
+    .quarter-title {
       font-size: 17px;
       font-weight: 700;
+      margin-bottom: 12px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .badge {
-      font-size: 12px;
-      background: var(--accent-light);
-      color: var(--accent);
-      padding: 3px 8px;
-      border-radius: 12px;
-      font-weight: 700;
+    .quarter-3months {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 768px) {
+      .quarter-3months { grid-template-columns: 1fr; }
     }
 
+    /* 1년 12개월 그리드 */
+    .year-12grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 900px) {
+      .year-12grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 580px) {
+      .year-12grid { grid-template-columns: 1fr; }
+    }
+
+    /* 투두 리스트 스타일 */
     .input-row {
       display: flex;
       gap: 8px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
     .input-row input {
       flex: 1;
-      padding: 10px 14px;
+      padding: 10px 12px;
       border: 1px solid var(--border);
       border-radius: 8px;
       font-size: 14px;
       outline: none;
       background: var(--bg);
-    }
-    .input-row input:focus {
-      border-color: var(--accent);
     }
     .btn-add {
       background: var(--accent);
@@ -229,10 +387,8 @@
       padding: 0 16px;
       border-radius: 8px;
       font-weight: 600;
-      font-size: 14px;
       cursor: pointer;
     }
-
     .todo-list {
       list-style: none;
       display: flex;
@@ -243,13 +399,9 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 12px;
+      padding: 9px 12px;
       border-radius: 8px;
       background: var(--bg);
-      border: 1px solid transparent;
-    }
-    .todo-item:hover {
-      border-color: var(--border);
     }
     .todo-left {
       display: flex;
@@ -258,8 +410,8 @@
       flex: 1;
     }
     .todo-item input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
+      width: 17px;
+      height: 17px;
       accent-color: var(--accent);
       cursor: pointer;
     }
@@ -268,106 +420,23 @@
       color: var(--text-muted);
     }
     .btn-del {
-      background: transparent;
       border: none;
-      color: #C0B7B1;
+      background: transparent;
+      color: #BBB;
       cursor: pointer;
-      font-size: 18px;
-      padding: 0 6px;
+      font-size: 17px;
     }
-    .btn-del:hover {
-      color: #E63946;
-    }
+    .btn-del:hover { color: #E63946; }
 
-    .quarter-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-    }
-    @media (max-width: 768px) {
-      .quarter-grid { grid-template-columns: 1fr; }
-    }
-
-    .month-selector {
-      display: flex;
-      overflow-x: auto;
-      gap: 8px;
-      padding-bottom: 8px;
-      margin-bottom: 16px;
-    }
-    .month-btn {
-      padding: 7px 14px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      background: var(--card-bg);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-muted);
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .month-btn.active {
-      background: var(--accent);
-      color: white;
-      border-color: var(--accent);
-    }
-
+    /* 모달 */
     .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 20px;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
     }
     .modal-box {
-      background: var(--card-bg);
-      border-radius: 16px;
-      width: 100%;
-      max-width: 440px;
-      padding: 24px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      background: var(--card-bg); border-radius: 16px; width: 100%; max-width: 440px; padding: 22px;
     }
-    .modal-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 18px;
-    }
-    .theme-dots {
-      display: flex;
-      gap: 12px;
-      margin: 14px 0 20px;
-    }
-    .theme-dot {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      border: 2px solid transparent;
-      cursor: pointer;
-    }
-    .theme-dot.active {
-      border-color: var(--text-main);
-    }
-
-    .stickers-area {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      min-height: 48px;
-      padding: 8px;
-      background: var(--bg);
-      border-radius: 8px;
-      border: 1px dashed var(--border);
-      margin-top: 10px;
-    }
-    .sticker-tag {
-      font-size: 20px;
-      cursor: pointer;
-      user-select: none;
-    }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
   </style>
 </head>
 <body>
@@ -377,16 +446,17 @@
       <div class="header-container">
         <div class="header-title">
           <h1>
-            <span class="editable-text" id="txt_main_title" contenteditable="true" onblur="saveCustomText('txt_main_title', this.innerText)">2026 할 일 플래너</span>
-            <span style="font-size: 16px; opacity: 0.7;">✏️</span>
+            <button class="year-shift-btn" onclick="shiftYear(-1)">◀</button>
+            <span id="currentYearDisplay">2026</span>년
+            <button class="year-shift-btn" onclick="shiftYear(1)">▶</button>
+            <span class="editable-text" id="txt_main_title" contenteditable="true" onblur="saveCustomText('txt_main_title', this.innerText)">다이어리</span>
           </h1>
           <p>
-            <span class="editable-text" id="txt_banner_sub" contenteditable="true" onblur="saveCustomText('txt_banner_sub', this.innerText)">컴퓨터와 스마트폰에서 실시간으로 체크하는 할 일 목록</span>
+            <span class="editable-text" id="txt_banner_sub" contenteditable="true" onblur="saveCustomText('txt_banner_sub', this.innerText)">날짜별로 한눈에 관리하는 나의 플래너</span>
           </p>
         </div>
         <div class="header-controls">
-          <button class="btn-glass" onclick="openThemeModal()">✨ 테마·다꾸</button>
-          <button class="btn-glass" onclick="openSyncModal()">📱 PC·폰 연동</button>
+          <button class="btn-glass" onclick="openThemeModal()">✨ 커버·색상</button>
         </div>
       </div>
     </div>
@@ -394,101 +464,51 @@
 
   <main class="main-wrap">
     <nav class="view-tabs">
-      <button class="view-tab active" onclick="switchView('yearly')">1년 할 일</button>
-      <button class="view-tab" onclick="switchView('quarterly')">분기별 할 일</button>
-      <button class="view-tab" onclick="switchView('monthly')">월별 할 일</button>
+      <button class="view-tab active" onclick="switchView('monthly')">월별 달력</button>
+      <button class="view-tab" onclick="switchView('quarterly')">분기별 달력 (3개월 묶음)</button>
+      <button class="view-tab" onclick="switchView('yearly')">1년 달력 (12개월 전체)</button>
     </nav>
 
-    <!-- 1년 할 일 뷰 -->
-    <section id="view-yearly">
-      <div class="content-card">
-        <div class="card-head">
-          <div class="card-title">
-            📌 <span class="editable-text" id="txt_yearly_title" contenteditable="true" onblur="saveCustomText('txt_yearly_title', this.innerText)">올해 꼭 끝내야 할 중요한 일</span>
-            <span class="badge" id="yearlyBadge">0/0</span>
+    <!-- 1. 월별 달력 뷰 -->
+    <section id="view-monthly">
+      <div class="monthly-layout">
+        <!-- 달력 영역 -->
+        <div class="card">
+          <div class="month-nav">
+            <button class="btn-circle" onclick="changeMonth(-1)">◀</button>
+            <h2 id="calendarTitle">2026년 11월</h2>
+            <button class="btn-circle" onclick="changeMonth(1)">▶</button>
           </div>
+          <div class="cal-grid" id="mainCalendarGrid"></div>
         </div>
-        <div class="input-row">
-          <input type="text" id="yearlyInput" placeholder="올해의 중요한 할 일 입력 후 Enter..." onkeypress="handleEnter(event, 'yearly')">
-          <button class="btn-add" onclick="addTodo('yearly')">추가</button>
+
+        <!-- 선택된 날짜의 할 일 목록 -->
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h3 id="selectedDateTitle" style="font-size:16px; font-weight:700;">📌 오늘 할 일</h3>
+            <span id="dayTodoBadge" style="font-size:12px; background:var(--accent-light); color:var(--accent); padding:2px 8px; border-radius:12px; font-weight:700;">0/0</span>
+          </div>
+          <div class="input-row">
+            <input type="text" id="dayTodoInput" placeholder="이 날짜에 할 일 입력 후 Enter..." onkeypress="handleDayEnter(event)">
+            <button class="btn-add" onclick="addDayTodo()">추가</button>
+          </div>
+          <ul class="todo-list" id="dayTodoList"></ul>
         </div>
-        <ul class="todo-list" id="yearlyList"></ul>
       </div>
     </section>
 
-    <!-- 분기별 할 일 뷰 -->
+    <!-- 2. 분기별 달력 뷰 (월달력 합치기) -->
     <section id="view-quarterly" style="display: none;">
-      <div class="quarter-grid">
-        <div class="content-card">
-          <div class="card-head">
-            <div class="card-title">🌱 <span class="editable-text" id="txt_q1_title" contenteditable="true" onblur="saveCustomText('txt_q1_title', this.innerText)">1분기 (1~3월)</span></div>
-          </div>
-          <div class="input-row">
-            <input type="text" id="q1Input" placeholder="1분기 할 일..." onkeypress="handleEnter(event, 'q1')">
-            <button class="btn-add" onclick="addTodo('q1')">추가</button>
-          </div>
-          <ul class="todo-list" id="q1List"></ul>
-        </div>
-        <div class="content-card">
-          <div class="card-head">
-            <div class="card-title">☀️ <span class="editable-text" id="txt_q2_title" contenteditable="true" onblur="saveCustomText('txt_q2_title', this.innerText)">2분기 (4~6월)</span></div>
-          </div>
-          <div class="input-row">
-            <input type="text" id="q2Input" placeholder="2분기 할 일..." onkeypress="handleEnter(event, 'q2')">
-            <button class="btn-add" onclick="addTodo('q2')">추가</button>
-          </div>
-          <ul class="todo-list" id="q2List"></ul>
-        </div>
-        <div class="content-card">
-          <div class="card-head">
-            <div class="card-title">🍁 <span class="editable-text" id="txt_q3_title" contenteditable="true" onblur="saveCustomText('txt_q3_title', this.innerText)">3분기 (7~9월)</span></div>
-          </div>
-          <div class="input-row">
-            <input type="text" id="q3Input" placeholder="3분기 할 일..." onkeypress="handleEnter(event, 'q3')">
-            <button class="btn-add" onclick="addTodo('q3')">추가</button>
-          </div>
-          <ul class="todo-list" id="q3List"></ul>
-        </div>
-        <div class="content-card">
-          <div class="card-head">
-            <div class="card-title">❄️ <span class="editable-text" id="txt_q4_title" contenteditable="true" onblur="saveCustomText('txt_q4_title', this.innerText)">4분기 (10~12월)</span></div>
-          </div>
-          <div class="input-row">
-            <input type="text" id="q4Input" placeholder="4분기 할 일..." onkeypress="handleEnter(event, 'q4')">
-            <button class="btn-add" onclick="addTodo('q4')">추가</button>
-          </div>
-          <ul class="todo-list" id="q4List"></ul>
-        </div>
-      </div>
+      <div id="quarterlyContainer"></div>
     </section>
 
-    <!-- 월별 할 일 뷰 -->
-    <section id="view-monthly" style="display: none;">
-      <div class="month-selector" id="monthSelector"></div>
-      <div class="content-card">
-        <div class="card-head">
-          <div class="card-title">🗓️ <span id="monthlyTitle">이달의 할 일</span></div>
-          <span class="badge" id="monthlyBadge">0/0</span>
-        </div>
-        <div class="input-row">
-          <input type="text" id="monthlyInput" placeholder="이번 달에 꼭 해야 할 일을 적으세요..." onkeypress="handleEnter(event, 'monthly')">
-          <button class="btn-add" onclick="addTodo('monthly')">추가</button>
-        </div>
-        <ul class="todo-list" id="monthlyList"></ul>
-
-        <div style="margin-top: 24px;">
-          <div style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">스티커 다꾸 (클릭하여 추가/삭제)</div>
-          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-            <button onclick="addSticker('🌸')" style="border:none;background:none;font-size:20px;cursor:pointer;">🌸</button>
-            <button onclick="addSticker('☕')" style="border:none;background:none;font-size:20px;cursor:pointer;">☕</button>
-            <button onclick="addSticker('🌿')" style="border:none;background:none;font-size:20px;cursor:pointer;">🌿</button>
-            <button onclick="addSticker('🥑')" style="border:none;background:none;font-size:20px;cursor:pointer;">🥑</button>
-            <button onclick="addSticker('⭐')" style="border:none;background:none;font-size:20px;cursor:pointer;">⭐</button>
-            <button onclick="addSticker('📝')" style="border:none;background:none;font-size:20px;cursor:pointer;">📝</button>
-          </div>
-          <div class="stickers-area" id="stickersContainer"></div>
-        </div>
+    <!-- 3. 1년 달력 뷰 (12개월 합치기) -->
+    <section id="view-yearly" style="display: none;">
+      <div class="card" style="margin-bottom:16px;">
+        <h2 style="font-size:18px; font-weight:700; margin-bottom:4px;" id="yearlyCardTitle">2026년 연간 달력 (12개월)</h2>
+        <p style="font-size:13px; color:var(--text-muted);">날짜를 클릭하면 해당 날짜로 바로 이동해 일정을 확인할 수 있습니다.</p>
       </div>
+      <div class="year-12grid" id="year12Grid"></div>
     </section>
   </main>
 
@@ -499,272 +519,353 @@
         <h3 style="font-size:16px;">🎨 테마 색상 & 커버</h3>
         <button onclick="closeModal('themeModal')" style="border:none;background:none;font-size:20px;cursor:pointer;">×</button>
       </div>
-      <label style="font-size:13px;font-weight:600;color:var(--text-muted);">감성 컬러 테마</label>
-      <div class="theme-dots">
-        <div class="theme-dot active" style="background:#B08968;" onclick="setTheme('biscuit')"></div>
-        <div class="theme-dot" style="background:#E07A5F;" onclick="setTheme('peach')"></div>
-        <div class="theme-dot" style="background:#6B8F71;" onclick="setTheme('sage')"></div>
-        <div class="theme-dot" style="background:#8E7DBE;" onclick="setTheme('lavender')"></div>
-        <div class="theme-dot" style="background:#495057;" onclick="setTheme('mono')"></div>
+      <label style="font-size:13px;font-weight:600;color:var(--text-muted);">컬러 테마</label>
+      <div style="display:flex;gap:12px;margin:12px 0 18px;">
+        <div style="width:30px;height:30px;border-radius:50%;background:#B08968;cursor:pointer;" onclick="setTheme('biscuit')"></div>
+        <div style="width:30px;height:30px;border-radius:50%;background:#E07A5F;cursor:pointer;" onclick="setTheme('peach')"></div>
+        <div style="width:30px;height:30px;border-radius:50%;background:#6B8F71;cursor:pointer;" onclick="setTheme('sage')"></div>
+        <div style="width:30px;height:30px;border-radius:50%;background:#8E7DBE;cursor:pointer;" onclick="setTheme('lavender')"></div>
+        <div style="width:30px;height:30px;border-radius:50%;background:#495057;cursor:pointer;" onclick="setTheme('mono')"></div>
       </div>
-      <label style="font-size:13px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px;">커버 이미지 URL 직접 입력</label>
-      <input type="text" id="coverUrlInput" placeholder="https://..." style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:12px;">
-      <button class="btn-add" style="width:100%;padding:10px;" onclick="applyCoverUrl()">커버 이미지 적용</button>
-    </div>
-  </div>
-
-  <!-- 연동 모달 -->
-  <div class="modal-backdrop" id="syncModal">
-    <div class="modal-box">
-      <div class="modal-head">
-        <h3 style="font-size:16px;">📱 PC ↔ 스마트폰 동기화</h3>
-        <button onclick="closeModal('syncModal')" style="border:none;background:none;font-size:20px;cursor:pointer;">×</button>
-      </div>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">
-        컴퓨터와 스마트폰에서 동일한 연동 키를 입력해 두면 작성한 할 일이 공유됩니다.
-      </p>
-      <input type="text" id="syncKeyInput" placeholder="연동 키 입력 (예: PLAN-7788)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px;margin-bottom:12px;text-align:center;font-weight:700;">
-      <button class="btn-add" style="width:100%;padding:10px;" onclick="saveSyncKey()">연동 키 저장 및 불러오기</button>
+      <label style="font-size:13px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px;">커버 사진 주소(URL)</label>
+      <input type="text" id="coverUrlInput" placeholder="https://..." style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:12px;">
+      <button class="btn-add" style="width:100%;padding:10px;" onclick="applyCoverUrl()">적용</button>
     </div>
   </div>
 
   <script>
-    let currentMonth = new Date().getMonth() + 1;
-    let data = {
-      yearly: [],
-      q1: [], q2: [], q3: [], q4: [],
-      monthly: {},
-      stickers: {},
-      customTexts: {},
+    const today = new Date();
+    let currentYear = today.getFullYear();
+    let currentMonth = today.getMonth() + 1; // 1 ~ 12
+    let selectedDateStr = formatDateKey(today.getFullYear(), today.getMonth() + 1, today.getDate());
+
+    let store = {
+      todos: {},       // key: "YYYY-MM-DD" => [ {id, text, done} ]
+      customTexts: {}, // key: id => string
       theme: 'biscuit',
-      cover: '',
-      syncKey: 'PLAN-' + Math.floor(1000 + Math.random() * 9000)
+      cover: ''
     };
 
     function init() {
-      const saved = localStorage.getItem('planner_data');
+      const saved = localStorage.getItem('calendar_diary_data');
       if (saved) {
-        try { data = JSON.parse(saved); } catch(e){}
+        try { store = JSON.parse(saved); } catch(e){}
       }
-      if (!data.monthly) data.monthly = {};
-      if (!data.stickers) data.stickers = {};
-      if (!data.customTexts) data.customTexts = {};
-      
-      applySavedTexts();
-      buildMonthTabs();
+      if (!store.todos) store.todos = {};
+      if (!store.customTexts) store.customTexts = {};
+
+      applyCustomTexts();
       applyTheme();
-      renderAll();
+      updateYearDisplay();
+      renderMainCalendar();
+      renderSelectedDayTodos();
+    }
+
+    function formatDateKey(y, m, d) {
+      return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    }
+
+    function save() {
+      localStorage.setItem('calendar_diary_data', JSON.stringify(store));
     }
 
     function saveCustomText(id, text) {
-      if (!data.customTexts) data.customTexts = {};
-      data.customTexts[id] = text.trim();
+      store.customTexts[id] = text.trim();
       save();
     }
-
-    function applySavedTexts() {
-      for (const [id, text] of Object.entries(data.customTexts || {})) {
+    function applyCustomTexts() {
+      for (const [id, text] of Object.entries(store.customTexts)) {
         const el = document.getElementById(id);
         if (el) el.innerText = text;
       }
     }
 
-    function buildMonthTabs() {
-      const wrap = document.getElementById('monthSelector');
-      wrap.innerHTML = '';
-      for (let m = 1; m <= 12; m++) {
-        const btn = document.createElement('button');
-        btn.className = 'month-btn' + (m === currentMonth ? ' active' : '');
-        btn.textContent = m + '월';
-        btn.onclick = () => {
-          currentMonth = m;
-          document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          renderMonthly();
-        };
-        wrap.appendChild(btn);
-      }
+    function updateYearDisplay() {
+      document.getElementById('currentYearDisplay').innerText = currentYear;
+      document.getElementById('yearlyCardTitle').innerText = `${currentYear}년 연간 달력 (12개월)`;
+    }
+
+    function shiftYear(offset) {
+      currentYear += offset;
+      updateYearDisplay();
+      renderMainCalendar();
+      renderQuarterly();
+      renderYearly();
+    }
+
+    function changeMonth(offset) {
+      currentMonth += offset;
+      if (currentMonth > 12) { currentMonth = 1; currentYear++; }
+      if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+      updateYearDisplay();
+      renderMainCalendar();
     }
 
     function switchView(view) {
-      document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.view-tab').forEach(b => b.classList.remove('active'));
       event.target.classList.add('active');
-      document.getElementById('view-yearly').style.display = view === 'yearly' ? 'block' : 'none';
-      document.getElementById('view-quarterly').style.display = view === 'quarterly' ? 'block' : 'none';
+
       document.getElementById('view-monthly').style.display = view === 'monthly' ? 'block' : 'none';
+      document.getElementById('view-quarterly').style.display = view === 'quarterly' ? 'block' : 'none';
+      document.getElementById('view-yearly').style.display = view === 'yearly' ? 'block' : 'none';
+
+      if (view === 'quarterly') renderQuarterly();
+      if (view === 'yearly') renderYearly();
+      if (view === 'monthly') renderMainCalendar();
     }
 
-    function handleEnter(e, target) {
-      if (e.key === 'Enter') addTodo(target);
-    }
+    /* --- 월별 달력 렌더링 --- */
+    function renderMainCalendar() {
+      document.getElementById('calendarTitle').innerText = `${currentYear}년 ${currentMonth}월`;
+      const grid = document.getElementById('mainCalendarGrid');
+      grid.innerHTML = '';
 
-    function addTodo(target) {
-      let inputId = target + 'Input';
-      let input = document.getElementById(inputId);
-      let text = input.value.trim();
-      if (!text) return;
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+      dayNames.forEach((d, idx) => {
+        const h = document.createElement('div');
+        h.className = 'cal-header-cell' + (idx === 0 ? ' sun' : idx === 6 ? ' sat' : '');
+        h.innerText = d;
+        grid.appendChild(h);
+      });
 
-      if (target === 'monthly') {
-        if (!data.monthly[currentMonth]) data.monthly[currentMonth] = [];
-        data.monthly[currentMonth].push({ id: Date.now(), text, done: false });
-      } else {
-        if (!data[target]) data[target] = [];
-        data[target].push({ id: Date.now(), text, done: false });
+      const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
+      const totalDays = new Date(currentYear, currentMonth, 0).getDate();
+      const prevMonthDays = new Date(currentYear, currentMonth - 1, 0).getDate();
+
+      // 이전 달 빈칸 채우기
+      for (let i = firstDay - 1; i >= 0; i--) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-day-cell other-month';
+        cell.innerHTML = `<span class="day-num">${prevMonthDays - i}</span>`;
+        grid.appendChild(cell);
       }
 
-      input.value = '';
-      save();
-      renderAll();
-    }
+      // 이번 달 날짜
+      for (let day = 1; day <= totalDays; day++) {
+        const dateKey = formatDateKey(currentYear, currentMonth, day);
+        const dayOfWeek = new Date(currentYear, currentMonth - 1, day).getDay();
+        const isToday = (currentYear === today.getFullYear() && currentMonth === (today.getMonth()+1) && day === today.getDate());
+        const isSelected = (dateKey === selectedDateStr);
 
-    function editTodoText(target, id, newText) {
-      let list = target === 'monthly' ? data.monthly[currentMonth] : data[target];
-      let item = list.find(x => x.id === id);
-      if (item) {
-        item.text = newText.trim();
-        save();
-      }
-    }
+        const cell = document.createElement('div');
+        cell.className = 'cal-day-cell' + (isToday ? ' today' : '') + (isSelected ? ' selected' : '');
+        
+        const numSpan = `<span class="day-num ${dayOfWeek === 0 ? 'sun' : dayOfWeek === 6 ? 'sat' : ''}">${day}</span>`;
+        
+        const list = store.todos[dateKey] || [];
+        let dotsHtml = '<div class="todo-dots">';
+        list.slice(0, 5).forEach(item => {
+          dotsHtml += `<div class="todo-dot ${item.done ? 'done' : ''}"></div>`;
+        });
+        if (list.length > 5) dotsHtml += `<span style="font-size:9px;color:var(--text-muted);">+${list.length-5}</span>`;
+        dotsHtml += '</div>';
 
-    function toggleTodo(target, id) {
-      let list = target === 'monthly' ? data.monthly[currentMonth] : data[target];
-      let item = list.find(x => x.id === id);
-      if (item) item.done = !item.done;
-      save();
-      renderAll();
-    }
-
-    function deleteTodo(target, id) {
-      if (target === 'monthly') {
-        data.monthly[currentMonth] = data.monthly[currentMonth].filter(x => x.id !== id);
-      } else {
-        data[target] = data[target].filter(x => x.id !== id);
-      }
-      save();
-      renderAll();
-    }
-
-    function addSticker(emoji) {
-      if (!data.stickers[currentMonth]) data.stickers[currentMonth] = [];
-      data.stickers[currentMonth].push(emoji);
-      save();
-      renderStickers();
-    }
-
-    function removeSticker(idx) {
-      if (data.stickers[currentMonth]) {
-        data.stickers[currentMonth].splice(idx, 1);
-        save();
-        renderStickers();
+        cell.innerHTML = `<div>${numSpan}</div>${dotsHtml}`;
+        cell.onclick = () => {
+          selectedDateStr = dateKey;
+          renderMainCalendar();
+          renderSelectedDayTodos();
+        };
+        grid.appendChild(cell);
       }
     }
 
-    function renderList(list, elId, target) {
-      const el = document.getElementById(elId);
-      el.innerHTML = '';
-      if (!list || list.length === 0) {
-        el.innerHTML = '<li style="text-align:center;color:var(--text-muted);font-size:13px;padding:12px;">등록된 할 일이 없습니다.</li>';
+    function renderSelectedDayTodos() {
+      const parts = selectedDateStr.split('-');
+      document.getElementById('selectedDateTitle').innerText = `📌 ${parseInt(parts[1])}월 ${parseInt(parts[2])}일 할 일`;
+      const list = store.todos[selectedDateStr] || [];
+      const ul = document.getElementById('dayTodoList');
+      ul.innerHTML = '';
+
+      const doneCount = list.filter(x => x.done).length;
+      document.getElementById('dayTodoBadge').innerText = `${doneCount}/${list.length}`;
+
+      if (list.length === 0) {
+        ul.innerHTML = '<li style="text-align:center;color:var(--text-muted);font-size:13px;padding:16px;">등록된 할 일이 없습니다.</li>';
         return;
       }
+
       list.forEach(item => {
         const li = document.createElement('li');
         li.className = 'todo-item' + (item.done ? ' done' : '');
         li.innerHTML = `
           <div class="todo-left">
-            <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleTodo('${target}', ${item.id})">
-            <span class="todo-text editable-text" contenteditable="true" onblur="editTodoText('${target}', ${item.id}, this.innerText)">${item.text}</span>
+            <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleTodo('${item.id}')">
+            <span class="todo-text editable-text" contenteditable="true" onblur="editTodoText('${item.id}', this.innerText)">${item.text}</span>
           </div>
-          <button class="btn-del" onclick="deleteTodo('${target}', ${item.id})">×</button>
+          <button class="btn-del" onclick="deleteTodo('${item.id}')">×</button>
         `;
-        el.appendChild(li);
+        ul.appendChild(li);
       });
     }
 
-    function renderMonthly() {
-      document.getElementById('monthlyTitle').textContent = `${currentMonth}월 할 일`;
-      const list = data.monthly[currentMonth] || [];
-      renderList(list, 'monthlyList', 'monthly');
-      const done = list.filter(x => x.done).length;
-      document.getElementById('monthlyBadge').textContent = `${done}/${list.length}`;
-      renderStickers();
+    function handleDayEnter(e) {
+      if (e.key === 'Enter') addDayTodo();
     }
 
-    function renderStickers() {
-      const box = document.getElementById('stickersContainer');
-      box.innerHTML = '';
-      const list = data.stickers[currentMonth] || [];
-      list.forEach((s, i) => {
-        const span = document.createElement('span');
-        span.className = 'sticker-tag';
-        span.textContent = s;
-        span.onclick = () => removeSticker(i);
-        box.appendChild(span);
+    function addDayTodo() {
+      const input = document.getElementById('dayTodoInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      if (!store.todos[selectedDateStr]) store.todos[selectedDateStr] = [];
+      store.todos[selectedDateStr].push({ id: Date.now().toString(), text, done: false });
+      input.value = '';
+      save();
+      renderMainCalendar();
+      renderSelectedDayTodos();
+    }
+
+    function toggleTodo(id) {
+      const list = store.todos[selectedDateStr] || [];
+      const item = list.find(x => x.id === id);
+      if (item) item.done = !item.done;
+      save();
+      renderMainCalendar();
+      renderSelectedDayTodos();
+    }
+
+    function editTodoText(id, newText) {
+      const list = store.todos[selectedDateStr] || [];
+      const item = list.find(x => x.id === id);
+      if (item) {
+        item.text = newText.trim();
+        save();
+        renderMainCalendar();
+      }
+    }
+
+    function deleteTodo(id) {
+      store.todos[selectedDateStr] = (store.todos[selectedDateStr] || []).filter(x => x.id !== id);
+      save();
+      renderMainCalendar();
+      renderSelectedDayTodos();
+    }
+
+    /* --- 미니 달력 빌더 (공통 함수) --- */
+    function buildMiniCalendar(year, month) {
+      const firstDay = new Date(year, month - 1, 1).getDay();
+      const totalDays = new Date(year, month, 0).getDate();
+
+      let html = `
+        <div class="mini-cal-box">
+          <div class="mini-cal-title">
+            <span>${month}월</span>
+            <button onclick="goToMonth(${month})" style="border:none;background:none;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;">상세보기 ›</button>
+          </div>
+          <div class="mini-grid">
+            <span style="color:var(--sun-color);font-size:10px;">일</span>
+            <span style="font-size:10px;color:var(--text-muted);">월</span>
+            <span style="font-size:10px;color:var(--text-muted);">화</span>
+            <span style="font-size:10px;color:var(--text-muted);">수</span>
+            <span style="font-size:10px;color:var(--text-muted);">목</span>
+            <span style="font-size:10px;color:var(--text-muted);">금</span>
+            <span style="color:var(--sat-color);font-size:10px;">토</span>
+      `;
+
+      for (let i = 0; i < firstDay; i++) {
+        html += `<div></div>`;
+      }
+
+      for (let d = 1; d <= totalDays; d++) {
+        const dKey = formatDateKey(year, month, d);
+        const hasTodo = (store.todos[dKey] && store.todos[dKey].length > 0);
+        html += `<div class="mini-day ${hasTodo ? 'has-todo' : ''}" onclick="goToDay('${dKey}')">${d}</div>`;
+      }
+
+      html += `</div></div>`;
+      return html;
+    }
+
+    function goToMonth(m) {
+      currentMonth = m;
+      switchViewByName('monthly');
+      renderMainCalendar();
+    }
+
+    function goToDay(dateKey) {
+      selectedDateStr = dateKey;
+      const parts = dateKey.split('-');
+      currentYear = parseInt(parts[0]);
+      currentMonth = parseInt(parts[1]);
+      switchViewByName('monthly');
+      updateYearDisplay();
+      renderMainCalendar();
+      renderSelectedDayTodos();
+    }
+
+    function switchViewByName(view) {
+      document.querySelectorAll('.view-tab').forEach(b => {
+        if (b.innerText.includes('월별') && view === 'monthly') b.classList.add('active');
+        else b.classList.remove('active');
+      });
+      document.getElementById('view-monthly').style.display = 'block';
+      document.getElementById('view-quarterly').style.display = 'none';
+      document.getElementById('view-yearly').style.display = 'none';
+    }
+
+    /* --- 분기별 달력 (3개월씩 합치기) --- */
+    function renderQuarterly() {
+      const container = document.getElementById('quarterlyContainer');
+      container.innerHTML = '';
+
+      const quarters = [
+        { name: '1분기 (1~3월)', months: [1, 2, 3], icon: '🌱' },
+        { name: '2분기 (4~6월)', months: [4, 5, 6], icon: '☀️' },
+        { name: '3분기 (7~9월)', months: [7, 8, 9], icon: '🍁' },
+        { name: '4분기 (10~12월)', months: [10, 11, 12], icon: '❄️' }
+      ];
+
+      quarters.forEach(q => {
+        const sec = document.createElement('div');
+        sec.className = 'quarter-section';
+        sec.innerHTML = `
+          <div class="quarter-title">${q.icon} ${q.name}</div>
+          <div class="quarter-3months">
+            ${buildMiniCalendar(currentYear, q.months[0])}
+            ${buildMiniCalendar(currentYear, q.months[1])}
+            ${buildMiniCalendar(currentYear, q.months[2])}
+          </div>
+        `;
+        container.appendChild(sec);
       });
     }
 
-    function renderAll() {
-      renderList(data.yearly, 'yearlyList', 'yearly');
-      const yDone = (data.yearly || []).filter(x => x.done).length;
-      document.getElementById('yearlyBadge').textContent = `${yDone}/${(data.yearly || []).length}`;
-
-      renderList(data.q1, 'q1List', 'q1');
-      renderList(data.q2, 'q2List', 'q2');
-      renderList(data.q3, 'q3List', 'q3');
-      renderList(data.q4, 'q4List', 'q4');
-      renderMonthly();
+    /* --- 1년 달력 (12개월 전체 합치기) --- */
+    function renderYearly() {
+      const grid = document.getElementById('year12Grid');
+      grid.innerHTML = '';
+      for (let m = 1; m <= 12; m++) {
+        grid.innerHTML += buildMiniCalendar(currentYear, m);
+      }
     }
 
-    function save() {
-      localStorage.setItem('planner_data', JSON.stringify(data));
-    }
-
-    function openThemeModal() {
-      document.getElementById('themeModal').style.display = 'flex';
-      document.getElementById('coverUrlInput').value = data.cover || '';
-    }
-    function openSyncModal() {
-      document.getElementById('syncModal').style.display = 'flex';
-      document.getElementById('syncKeyInput').value = data.syncKey || '';
-    }
-    function closeModal(id) {
-      document.getElementById(id).style.display = 'none';
-    }
-
-    function setTheme(name) {
-      data.theme = name;
+    /* --- 테마 / 커버 제어 --- */
+    function openThemeModal() { document.getElementById('themeModal').style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function setTheme(theme) {
+      store.theme = theme;
       applyTheme();
       save();
     }
     function applyCoverUrl() {
       const url = document.getElementById('coverUrlInput').value.trim();
       if (url) {
-        data.cover = url;
-        document.documentElement.style.setProperty('--header-img', `url('${url}')`);
+        store.cover = url;
+        applyTheme();
         save();
         closeModal('themeModal');
       }
     }
     function applyTheme() {
-      document.documentElement.setAttribute('data-theme', data.theme || 'biscuit');
-      if (data.cover) {
-        document.documentElement.style.setProperty('--header-img', `url('${data.cover}')`);
-      }
-    }
-
-    function saveSyncKey() {
-      const key = document.getElementById('syncKeyInput').value.trim();
-      if (key) {
-        data.syncKey = key;
-        save();
-        alert('연동 키가 설정되었습니다: ' + key);
-        closeModal('syncModal');
+      document.documentElement.setAttribute('data-theme', store.theme || 'biscuit');
+      if (store.cover) {
+        document.documentElement.style.setProperty('--header-img', `url('${store.cover}')`);
       }
     }
 
     window.onclick = function(e) {
-      if (e.target.classList.contains('modal-backdrop')) {
-        e.target.style.display = 'none';
-      }
+      if (e.target.classList.contains('modal-backdrop')) e.target.style.display = 'none';
     };
 
     init();
