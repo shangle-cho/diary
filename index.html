@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -24,11 +23,14 @@
       --accent-dark: #7D5E42;
       --warning: #D97706;
       --warning-light: #FEF3C7;
+      --important-color: #E65100;
+      --important-bg: #FFF3E0;
       --header-img: url('https://images.unsplash.com/photo-1507842229451-7f01be8f5043?auto=format&fit=crop&w=1600&q=80');
       --shadow: 0 4px 18px rgba(135, 126, 119, 0.09);
       --radius: 16px;
       --sun-color: #E63946;
-      --sat-color: #457B9D;
+      --holiday-bg: #FFF5F5;
+      --sat-color: #2A6F97;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -111,44 +113,87 @@
     .cal-header-cell.sat { color: var(--sat-color); }
 
     .cal-day-cell {
-      min-height: 64px; background: var(--bg); border-radius: 10px; padding: 6px;
+      min-height: 66px; background: var(--bg); border-radius: 10px; padding: 6px;
       cursor: pointer; display: flex; flex-direction: column; justify-content: space-between;
       border: 1px solid transparent; transition: all 0.15s;
+      position: relative;
     }
     .cal-day-cell:hover { border-color: var(--accent); }
     .cal-day-cell.selected { background: var(--accent-light); border: 2px solid var(--accent); }
+    .cal-day-cell.is-custom-holiday { background: var(--holiday-bg); border-color: #FFCDD2; }
+    .cal-day-cell.has-important { border-color: #FBBF24; }
+    
     .cal-day-cell.today .day-num {
       background: var(--accent); color: white; border-radius: 50%;
       width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
     }
     .day-num { font-size: 13px; font-weight: 700; }
-    .day-num.sun { color: var(--sun-color); }
+    .day-num.sun, .day-num.holiday { color: var(--sun-color); }
     .day-num.sat { color: var(--sat-color); }
 
-    .todo-dots { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+    .todo-dots { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; align-items: center; }
     .todo-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
     .todo-dot.done { background: #A0AAB2; }
+    .todo-dot.important { background: #F59E0B; width: 7px; height: 7px; box-shadow: 0 0 4px rgba(245, 158, 11, 0.6); }
 
-    .input-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    /* 입력 영역 & 버튼들 */
+    .input-row { display: flex; gap: 6px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
     .input-row input {
-      flex: 1; padding: 10px 14px; border: 1px solid var(--border);
+      flex: 1; min-width: 140px; padding: 9px 12px; border: 1px solid var(--border);
       border-radius: 8px; font-size: 14px; outline: none; background: var(--bg);
     }
-    .btn-add { background: var(--accent); color: white; border: none; padding: 0 16px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    .btn-action {
+      border: 1px solid #E5E7EB; background: #FFF; padding: 8px 10px;
+      border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; color: #666;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-action.active-star {
+      border-color: #F59E0B; background: #FFFBEB; color: #B45309;
+    }
+    .btn-action.active-holiday {
+      border-color: #EF4444; background: #FEF2F2; color: #DC2626;
+    }
+    .btn-add { background: var(--accent); color: white; border: none; padding: 0 16px; height: 38px; border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 
-    .todo-scroll-list { max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    /* 누적 목록 */
+    .todo-scroll-list { max-height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 2px; }
     .todo-item {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 9px 12px; border-radius: 8px; background: var(--bg);
+      padding: 8px 12px; border-radius: 8px; background: var(--bg);
+      border: 1px solid transparent; transition: all 0.15s;
     }
-    .todo-left { display: flex; align-items: center; gap: 10px; flex: 1; }
+    .todo-item.is-important {
+      background: var(--important-bg);
+      border: 1px solid #FFCC80;
+    }
+    .todo-left { display: flex; align-items: center; gap: 8px; flex: 1; }
+    
     .todo-date-tag {
-      font-size: 11px; font-weight: 800; background: var(--card-bg);
+      font-size: 11.5px; font-weight: 800; background: var(--card-bg);
       border: 1px solid var(--border); padding: 2px 7px; border-radius: 6px; color: var(--accent);
+      white-space: nowrap;
     }
+    .todo-date-tag.sun, .todo-date-tag.holiday { color: var(--sun-color); border-color: #FFCDD2; background: #FFEBEE; }
+    .todo-date-tag.sat { color: var(--sat-color); border-color: #BBDEFB; background: #E3F2FD; }
+
+    .star-btn {
+      border: none; background: none; font-size: 16px; cursor: pointer;
+      color: #D1D5DB; padding: 0 2px; transition: color 0.15s;
+    }
+    .star-btn.active { color: #F59E0B; }
+
     .todo-item.done span.todo-text { text-decoration: line-through; color: var(--text-muted); }
-    .btn-del { border: none; background: transparent; color: #CCC; cursor: pointer; font-size: 18px; }
+    .btn-del { border: none; background: transparent; color: #CCC; cursor: pointer; font-size: 18px; padding: 0 4px; }
     .btn-del:hover { color: #E63946; }
+
+    /* 주간 구분선 */
+    .week-divider {
+      display: flex; align-items: center; gap: 8px; margin: 8px 0 4px;
+      color: #A39992; font-size: 11px; font-weight: 700;
+    }
+    .week-divider::before, .week-divider::after {
+      content: ''; flex: 1; height: 1px; border-bottom: 1px dashed #D6CEC5;
+    }
 
     .quarter-card { background: var(--card-bg); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); margin-bottom: 20px; }
     .quarter-card.current-quarter { border: 2px solid var(--accent); }
@@ -156,9 +201,13 @@
     .mini-cal-box { background: var(--bg); border-radius: 10px; padding: 10px; border: 1px solid var(--border); }
     .mini-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
     .mini-day { font-size: 11px; padding: 3px 0; border-radius: 4px; cursor: pointer; position: relative; }
+    .mini-day.holiday { color: var(--sun-color); font-weight: 700; }
     .mini-day.has-todo::after {
       content: ''; position: absolute; bottom: 1px; left: 50%; transform: translateX(-50%);
       width: 4px; height: 4px; border-radius: 50%; background: var(--accent);
+    }
+    .mini-day.has-important::after {
+      background: #F59E0B; width: 5px; height: 5px;
     }
     .year-12grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
     @media (max-width: 880px) { .year-12grid { grid-template-columns: repeat(2, 1fr); } }
@@ -209,11 +258,17 @@
 
           <hr style="border:0; border-top:1px solid var(--border); margin:18px 0;">
 
-          <div style="font-size:14px; font-weight:800; margin-bottom:8px;" id="selectedDateLabel">
-            📌 선택한 날짜에 할 일 등록
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-size:14px; font-weight:800;" id="selectedDateLabel">
+              📌 선택한 날짜에 할 일 등록
+            </div>
+            <!-- 선택된 날짜 휴일 토글 버튼 -->
+            <button type="button" id="holidayToggleBtn" class="btn-action" onclick="toggleDateHoliday()">🏖️ 휴일 지정</button>
           </div>
+          
           <div class="input-row">
             <input type="text" id="dayTodoInput" placeholder="할 일 입력 후 Enter..." onkeypress="handleDayEnter(event)">
+            <button type="button" id="importantToggleBtn" class="btn-action" onclick="toggleInputImportance()">⭐ 중요</button>
             <button class="btn-add" onclick="addDayTodo()">등록</button>
           </div>
         </div>
@@ -228,14 +283,13 @@
       </div>
     </section>
 
-    <!-- 분기별 화면 (현재 분기 최상단 배치) -->
+    <!-- 분기별 화면 -->
     <section id="view-quarterly" style="display: none;">
       <div id="quarterlyContainer"></div>
     </section>
 
-    <!-- 1년 화면: 누적 일정 목록 바로 아래에 12개월 달력 바로 배치 -->
+    <!-- 1년 화면 -->
     <section id="view-yearly" style="display: none;">
-      <!-- 1년 전체 누적 일정 카드 -->
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
           <div>
@@ -245,8 +299,6 @@
         </div>
         <div class="todo-scroll-list" id="yearlyAccumList" style="max-height:360px;"></div>
       </div>
-
-      <!-- 1년 12개월 롤링 달력 그리드 (불필요한 안내 카드 없이 바로 노출) -->
       <div class="year-12grid" id="year12Grid"></div>
     </section>
   </main>
@@ -259,10 +311,14 @@
     };
 
     let db = null;
+    let isInputImportant = false;
     let store = { 
       todos: {},
+      holidays: {}, // key: "YYYY-MM-DD" => true (내가 지정한 휴일)
       title: "2026년 다이어리"
     };
+
+    const dayKoreanNames = ['일', '월', '화', '수', '목', '금', '토'];
 
     try {
       if (firebaseConfig.apiKey !== "본인의_API_KEY") {
@@ -273,6 +329,7 @@
           const val = snapshot.val();
           if (val) {
             store.todos = val.todos || {};
+            store.holidays = val.holidays || {};
             if (val.title) {
               store.title = val.title;
               document.getElementById('mainHeaderTitle').innerText = val.title;
@@ -285,6 +342,7 @@
         document.getElementById('syncText').innerText = '로컬 모드';
         const saved = localStorage.getItem('planner_todos_local');
         if (saved) store = JSON.parse(saved);
+        if (!store.holidays) store.holidays = {};
       }
     } catch(e) {
       console.error(e);
@@ -303,19 +361,59 @@
     function formatDateKey(y, m, d) {
       return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     }
-    function formatShortDate(dStr) {
+
+    function getDayOfWeek(dStr) {
+      const [y, m, d] = dStr.split('-').map(Number);
+      return new Date(y, m - 1, d).getDay(); // 0(일) ~ 6(토)
+    }
+
+    function isHoliday(dStr) {
+      const dayIdx = getDayOfWeek(dStr);
+      if (dayIdx === 0) return true; // 일요일은 기본 휴일
+      return !!(store.holidays && store.holidays[dStr]); // 사용자가 지정한 휴일
+    }
+
+    function formatShortDateWithDay(dStr) {
       const p = dStr.split('-');
-      return `${parseInt(p[1])}/${parseInt(p[2])}`;
+      const dayIdx = getDayOfWeek(dStr);
+      return {
+        text: `${parseInt(p[1])}/${parseInt(p[2])}(${dayKoreanNames[dayIdx]})`,
+        dayIdx: dayIdx,
+        isCustomHoliday: !!(store.holidays && store.holidays[dStr])
+      };
     }
 
     function syncSave() {
       if (db) {
         db.ref('planner_data').set({ 
           todos: store.todos,
+          holidays: store.holidays || {},
           title: store.title || "2026년 다이어리"
         });
       } else {
         localStorage.setItem('planner_todos_local', JSON.stringify(store));
+      }
+    }
+
+    /* 선택된 날짜의 휴일 토글 */
+    function toggleDateHoliday() {
+      if (!store.holidays) store.holidays = {};
+      if (store.holidays[selectedDateStr]) {
+        delete store.holidays[selectedDateStr];
+      } else {
+        store.holidays[selectedDateStr] = true;
+      }
+      syncSave();
+      renderAllViews();
+    }
+
+    function toggleInputImportance() {
+      isInputImportant = !isInputImportant;
+      const btn = document.getElementById('importantToggleBtn');
+      if (isInputImportant) {
+        btn.classList.add('active-star');
+      } else {
+        btn.classList.remove('active-star');
       }
     }
 
@@ -340,6 +438,20 @@
       renderMonthlyAccum();
       renderQuarterly();
       renderYearly();
+      updateHolidayButtonUI();
+    }
+
+    function updateHolidayButtonUI() {
+      const btn = document.getElementById('holidayToggleBtn');
+      if (!btn) return;
+      const isCustom = !!(store.holidays && store.holidays[selectedDateStr]);
+      if (isCustom) {
+        btn.classList.add('active-holiday');
+        btn.innerText = '🏖️ 휴일 해제';
+      } else {
+        btn.classList.remove('active-holiday');
+        btn.innerText = '🏖️ 휴일 지정';
+      }
     }
 
     function renderMainCalendar() {
@@ -347,7 +459,7 @@
       const grid = document.getElementById('mainCalendarGrid');
       grid.innerHTML = '';
 
-      ['일','월','화','수','목','금','토'].forEach((d, idx) => {
+      dayKoreanNames.forEach((d, idx) => {
         const h = document.createElement('div');
         h.className = 'cal-header-cell' + (idx === 0 ? ' sun' : idx === 6 ? ' sat' : '');
         h.innerText = d;
@@ -367,14 +479,35 @@
         const dayOfWeek = new Date(currentYear, currentMonth - 1, day).getDay();
         const isToday = (currentYear === today.getFullYear() && currentMonth === (today.getMonth()+1) && day === today.getDate());
         const isSelected = (dKey === selectedDateStr);
+        const isHolidayDate = isHoliday(dKey);
+        const isCustomHoliday = !!(store.holidays && store.holidays[dKey]);
+
+        const list = store.todos[dKey] || [];
+        const hasImportant = list.some(x => x.important && !x.done);
 
         const cell = document.createElement('div');
-        cell.className = 'cal-day-cell' + (isToday ? ' today' : '') + (isSelected ? ' selected' : '');
+        cell.className = 'cal-day-cell' + 
+          (isToday ? ' today' : '') + 
+          (isSelected ? ' selected' : '') + 
+          (isCustomHoliday ? ' is-custom-holiday' : '') + 
+          (hasImportant ? ' has-important' : '');
 
-        const numSpan = `<span class="day-num ${dayOfWeek === 0 ? 'sun' : dayOfWeek === 6 ? 'sat' : ''}">${day}</span>`;
-        const list = store.todos[dKey] || [];
+        let numClass = 'day-num';
+        if (isHolidayDate) numClass += ' holiday';
+        else if (dayOfWeek === 6) numClass += ' sat';
+
+        let numSpan = `<span class="${numClass}">${day}</span>`;
+        if (hasImportant) {
+          numSpan += `<span style="font-size:10px; color:#F59E0B; margin-left:2px;">⭐</span>`;
+        }
+
         let dots = '<div class="todo-dots">';
-        list.slice(0, 4).forEach(it => { dots += `<div class="todo-dot ${it.done ? 'done' : ''}"></div>`; });
+        list.slice(0, 4).forEach(it => {
+          let dotClass = 'todo-dot';
+          if (it.done) dotClass += ' done';
+          else if (it.important) dotClass += ' important';
+          dots += `<div class="${dotClass}"></div>`;
+        });
         dots += '</div>';
 
         cell.innerHTML = `<div>${numSpan}</div>${dots}`;
@@ -382,6 +515,7 @@
           selectedDateStr = dKey;
           renderMainCalendar();
           updateSelectedLabel();
+          updateHolidayButtonUI();
         };
         grid.appendChild(cell);
       }
@@ -390,7 +524,10 @@
 
     function updateSelectedLabel() {
       const p = selectedDateStr.split('-');
-      document.getElementById('selectedDateLabel').innerText = `📌 ${parseInt(p[1])}월 ${parseInt(p[2])}일 할 일 등록`;
+      const dIdx = getDayOfWeek(selectedDateStr);
+      const isCustom = !!(store.holidays && store.holidays[selectedDateStr]);
+      document.getElementById('selectedDateLabel').innerText = 
+        `📌 ${parseInt(p[1])}월 ${parseInt(p[2])}일(${dayKoreanNames[dIdx]})${isCustom ? ' [휴일]' : ''} 할 일 등록`;
     }
 
     function handleDayEnter(e) {
@@ -402,8 +539,16 @@
       const text = input.value.trim();
       if (!text) return;
       if (!store.todos[selectedDateStr]) store.todos[selectedDateStr] = [];
-      store.todos[selectedDateStr].push({ id: Date.now().toString(), text, done: false });
+      
+      store.todos[selectedDateStr].push({ 
+        id: Date.now().toString(), 
+        text, 
+        done: false,
+        important: isInputImportant 
+      });
+
       input.value = '';
+      if (isInputImportant) toggleInputImportance();
       syncSave();
       renderAllViews();
     }
@@ -415,6 +560,13 @@
       renderAllViews();
     }
 
+    function toggleTodoImportance(dKey, id) {
+      const it = (store.todos[dKey] || []).find(x => x.id === id);
+      if (it) it.important = !it.important;
+      syncSave();
+      renderAllViews();
+    }
+
     function deleteTodoItem(dKey, id) {
       store.todos[dKey] = (store.todos[dKey] || []).filter(x => x.id !== id);
       if (store.todos[dKey].length === 0) delete store.todos[dKey];
@@ -422,43 +574,69 @@
       renderAllViews();
     }
 
-    function renderMonthlyAccum() {
-      document.getElementById('monthlyAccumTitle').innerText = `🗓️ ${currentMonth}월 전체 누적`;
-      const wrap = document.getElementById('monthlyAccumList');
-      wrap.innerHTML = '';
-      const prefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-      const dKeys = Object.keys(store.todos).filter(k => k.startsWith(prefix)).sort();
+    /* 누적 목록 생성 함수 (휴일 색상, 요일, 중요 표시, 주간 구분선) */
+    function buildAccumulatedListUI(container, dKeys) {
+      container.innerHTML = '';
       let total = 0, done = 0;
 
       if (dKeys.length === 0) {
-        wrap.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:30px;">등록된 일정이 없습니다.</div>';
-        document.getElementById('monthlyAccumBadge').innerText = '0/0';
-        return;
+        container.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:30px;">등록된 일정이 없습니다.</div>';
+        return { total: 0, done: 0 };
       }
-      dKeys.forEach(k => {
-        store.todos[k].forEach(it => {
+
+      for (let i = 0; i < dKeys.length; i++) {
+        const dKey = dKeys[i];
+        const dayIdx = getDayOfWeek(dKey);
+        const dateInfo = formatShortDateWithDay(dKey);
+        const isHolidayDate = isHoliday(dKey);
+
+        let tagClass = 'todo-date-tag';
+        if (isHolidayDate) tagClass += ' holiday';
+        else if (dayIdx === 6) tagClass += ' sat';
+
+        store.todos[dKey].forEach(it => {
           total++; if (it.done) done++;
-          wrap.appendChild(createRow(k, it));
+          
+          const div = document.createElement('div');
+          div.className = 'todo-item' + (it.done ? ' done' : '') + (it.important && !it.done ? ' is-important' : '');
+          div.innerHTML = `
+            <div class="todo-left">
+              <input type="checkbox" ${it.done ? 'checked' : ''} onchange="toggleTodoItem('${dKey}', '${it.id}')">
+              <button class="star-btn ${it.important ? 'active' : ''}" onclick="toggleTodoImportance('${dKey}', '${it.id}')" title="중요 일정 변경">★</button>
+              <span class="${tagClass}">${dateInfo.text}</span>
+              <span class="todo-text">${it.text}</span>
+            </div>
+            <button class="btn-del" onclick="deleteTodoItem('${dKey}', '${it.id}')">×</button>
+          `;
+          container.appendChild(div);
         });
-      });
-      document.getElementById('monthlyAccumBadge').innerText = `${done}/${total}`;
+
+        // 주간 구분선 (일요일이거나 다음 주로 넘어갈 때)
+        if (i < dKeys.length - 1) {
+          const nextKey = dKeys[i + 1];
+          const nextDayIdx = getDayOfWeek(nextKey);
+          if (dayIdx === 0 || nextDayIdx < dayIdx || (nextDayIdx === 1 && dayIdx !== 1)) {
+            const divider = document.createElement('div');
+            divider.className = 'week-divider';
+            divider.innerText = '── 다음 주 ──';
+            container.appendChild(divider);
+          }
+        }
+      }
+
+      return { total, done };
     }
 
-    function createRow(dKey, it) {
-      const div = document.createElement('div');
-      div.className = 'todo-item' + (it.done ? ' done' : '');
-      div.innerHTML = `
-        <div class="todo-left">
-          <input type="checkbox" ${it.done ? 'checked' : ''} onchange="toggleTodoItem('${dKey}', '${it.id}')">
-          <span class="todo-date-tag">${formatShortDate(dKey)}</span>
-          <span class="todo-text">${it.text}</span>
-        </div>
-        <button class="btn-del" onclick="deleteTodoItem('${dKey}', '${it.id}')">×</button>
-      `;
-      return div;
+    function renderMonthlyAccum() {
+      document.getElementById('monthlyAccumTitle').innerText = `🗓️ ${currentMonth}월 전체 누적`;
+      const wrap = document.getElementById('monthlyAccumList');
+      const prefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+      const dKeys = Object.keys(store.todos).filter(k => k.startsWith(prefix)).sort();
+      
+      const stats = buildAccumulatedListUI(wrap, dKeys);
+      document.getElementById('monthlyAccumBadge').innerText = `${stats.done}/${stats.total}`;
     }
 
-    /* --- 분기별 렌더링 --- */
     function renderQuarterly() {
       const container = document.getElementById('quarterlyContainer');
       container.innerHTML = '';
@@ -495,21 +673,18 @@
           <div class="todo-scroll-list" id="q_list_${q.qNum}" style="max-height:180px;"></div>
         `;
         container.appendChild(card);
+        
         const listWrap = card.querySelector(`#q_list_${q.qNum}`);
         const qKeys = Object.keys(store.todos).filter(k => {
           if (!k.startsWith(currentYear.toString())) return false;
           const mm = parseInt(k.split('-')[1]);
           return q.m.includes(mm);
         }).sort();
-        if (qKeys.length === 0) {
-          listWrap.innerHTML = '<span style="font-size:12px;color:var(--text-muted);padding:8px;">등록된 일정이 없습니다.</span>';
-        } else {
-          qKeys.forEach(k => store.todos[k].forEach(it => listWrap.appendChild(createRow(k, it))));
-        }
+
+        buildAccumulatedListUI(listWrap, qKeys);
       });
     }
 
-    /* --- 1년 렌더링 (설명 카드 없이 누적 목록 + 롤링 12개월 바로 노출) --- */
     function renderYearly() {
       const startYear = today.getFullYear();
       const startMonth = today.getMonth() + 1;
@@ -525,44 +700,22 @@
         rollingMonths.push({ year: y, month: m });
       }
 
-      // 1. 상단: 12개월 누적 일정 목록
+      // 상단: 12개월 누적 일정 목록
       const yWrap = document.getElementById('yearlyAccumList');
-      yWrap.innerHTML = '';
-      
       const allRollingKeys = Object.keys(store.todos).filter(k => {
         const [y, m] = k.split('-').map(Number);
         return rollingMonths.some(rm => rm.year === y && rm.month === m);
       }).sort();
 
-      let yTotal = 0;
-      let yDone = 0;
+      const stats = buildAccumulatedListUI(yWrap, allRollingKeys);
+      document.getElementById('yearlyAccumBadge').innerText = `${stats.done}/${stats.total}`;
 
-      if (allRollingKeys.length === 0) {
-        yWrap.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:30px;">앞으로 1년간 등록된 일정이 없습니다.</div>';
-        document.getElementById('yearlyAccumBadge').innerText = '0/0';
-      } else {
-        allRollingKeys.forEach(k => {
-          store.todos[k].forEach(it => {
-            yTotal++;
-            if (it.done) yDone++;
-            yWrap.appendChild(createRow(k, it));
-          });
-        });
-        document.getElementById('yearlyAccumBadge').innerText = `${doneCount(allRollingKeys)}/${yTotal}`;
-      }
-
-      // 2. 하단: 12개월 달력 그리드 바로 표시
+      // 하단: 12개월 롤링 달력
       const grid = document.getElementById('year12Grid');
       grid.innerHTML = '';
       rollingMonths.forEach(item => {
         grid.innerHTML += buildMini(item.year, item.month);
       });
-    }
-
-    function doneCount(keys) {
-      let count = 0;
-      keys.forEach(k => store.todos[k].forEach(it => { if (it.done) count++; }));
-      return count;
     }
 
     function buildMini(y, m) {
@@ -579,8 +732,17 @@
       for (let i = 0; i < fDay; i++) h += `<div></div>`;
       for (let d = 1; d <= tDays; d++) {
         const k = formatDateKey(y, m, d);
-        const has = (store.todos[k] && store.todos[k].length > 0);
-        h += `<div class="mini-day ${has ? 'has-todo' : ''}" onclick="goToSpecificDay('${k}')">${d}</div>`;
+        const list = store.todos[k] || [];
+        const hasTodo = list.length > 0;
+        const hasImportant = list.some(x => x.important && !x.done);
+        const isHolidayDate = isHoliday(k);
+        
+        let miniClass = 'mini-day';
+        if (isHolidayDate) miniClass += ' holiday';
+        if (hasImportant) miniClass += ' has-important';
+        else if (hasTodo) miniClass += ' has-todo';
+
+        h += `<div class="${miniClass}" onclick="goToSpecificDay('${k}')">${d}</div>`;
       }
       h += `</div></div>`;
       return h;
